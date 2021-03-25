@@ -14,6 +14,12 @@
 /*************************************************************************
 // Global variables
 **************************************************************************/
+// Debug
+var debugScreen;
+var showDebugScreen = true;
+
+// Data
+var interactionTable;
 
 // Style (Fonts, colors)
 var hexArrayR = [];
@@ -64,6 +70,12 @@ function windowResized() {
 // Function preload
 **************************************************************************/
 function preload() {
+  // Debug
+  debugScreen = new DebugScreen();
+
+  // Data
+  // interactionTable = loadTable('data/interactionTable.csv', 'csv', 'header');
+
   // Fonts
 
   // Images
@@ -79,6 +91,8 @@ function preload() {
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
+  // Debug
+  debugScreen.print("hi");
 
   //////////////////// p5 play setup
   SCENE_W = windowWidth/2;
@@ -100,39 +114,60 @@ function setup() {
 function draw() {
   background(hexArrayR[0]);
 
-  // draw the main sprite;
-  drawSprites();
+  // Draw the main sprite;
+  drawSprite(mainsprite);
   drawMainSprite();
-  // fsMessage();
+
+  // Debug (leave at bottom so it shows up on top)
+  if( showDebugScreen ) {
+    debugScreen.draw();
+  }
+
+  fsMessage();
 }
 
 
 /*************************************************************************
-// Fullscreen function
+// Keypressed function
 **************************************************************************/
-// Fullscreen message
-function fsMessage() {
-  push();
-  fill(255);
-  noStroke();
-  textSize(width/60);
-  textAlign(LEFT);
-  text("Press [F] for fullscreen", 0 + width/100 , height - height/100)
-  pop();
-}
-
-// keyTyped for debugMode and fullscreen
-function keyTyped() {
+function keyPressed() {
+  // Fullscreen
   if (key === 'f') {
     let fs = fullscreen();
     fullscreen(!fs);
   }
+
+  // Debug
+  if( key === 'q') {
+    showDebugScreen = !showDebugScreen;
+  }
+
+  // // States Interaction Table
+  // for (let i = 0; i < interactionTable.getRowCount(); i++) {
+  //   if(interactionTable.getString(i, 'CurrentState') === drawFunction.name ) {
+  //     if(interactionTable.getString(i, 'KeyTyped') === string(key) ) {
+  //       drawFunction = eval(interactionTable.getString(i, 'NextState'));
+  //     }
+  //   }
+  // }
+
  }
 
- /*************************************************************************
-// p5 play functions
-**************************************************************************/
+ // Fullscreen message
+function fsMessage() {
+  push();
+  fill(255);
+  noStroke();
+  textSize(width/80);
+  textAlign(LEFT);
+  text("Press [F] for fullscreen", 0 + width/100 , height - height/100);
+  text("Press [Q] for debug screen", 0 + width/100 , height - height/100 - 25);
+  pop();
+}
 
+/*************************************************************************
+// Mainsprite mobility functions
+**************************************************************************/
 function drawMainSprite() {
   //accelerate with shift
   if ((keyIsDown(16)) && (stamina >= 0)) {
@@ -228,3 +263,7 @@ function drawStamina() {
   rect(mainsprite.position.x + 15/4 - mainspriteW/1.5, mainsprite.position.y + 15/4 - mainspriteH+mainspriteH/10, stamina/3, 7.5);
   pop();
 }
+
+/*************************************************************************
+// States
+**************************************************************************/
