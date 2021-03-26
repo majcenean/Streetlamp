@@ -16,7 +16,7 @@
 **************************************************************************/
 // Debug
 var debugScreen;
-var showDebugScreen = true;
+var showDebugScreen = false;
 
 // Data
 var interactionTable;
@@ -51,20 +51,13 @@ var mainspriteW = 50;
 var mainspriteH = 80;
 
 // Main Sprite Controls
-var speedleftup = 0;
-var speedrightdown = 0;
+var speedleft = 0;
+var speedright = 0;
+var speedup = 0;
+var speeddown = 0;
 var facing = 1;
 var isidle = 0;
 var stamina = 200;
-
-
-/*************************************************************************
-// Window resize
-**************************************************************************/
-
-function windowResized() {
-  resizeCanvas(windowWidth, windowHeight);
-}
 
 /*************************************************************************
 // Function preload
@@ -89,17 +82,15 @@ function preload() {
 **************************************************************************/
 
 function setup() {
-  createCanvas(windowWidth, windowHeight);
+  createCanvas(1366, 768);
 
   // Debug
   debugScreen.print("hi");
 
   //////////////////// p5 play setup
-  SCENE_W = windowWidth/2;
-  SCENE_H = windowHeight/2;
 
   // Sprites
-  mainsprite = createSprite(SCENE_W, SCENE_H, mainspriteW, mainspriteH);
+  mainsprite = createSprite(width/2, height/2, mainspriteW, mainspriteH);
 
   // mainsprite
   var mainspriteMove = mainsprite.addAnimation('idle',
@@ -123,7 +114,8 @@ function draw() {
     debugScreen.draw();
   }
 
-  fsMessage();
+  // fsMessage();
+  noCursor();
 }
 
 
@@ -138,7 +130,7 @@ function keyPressed() {
   }
 
   // Debug
-  if( key === 'q') {
+  if( key === 'i') {
     showDebugScreen = !showDebugScreen;
   }
 
@@ -161,7 +153,7 @@ function fsMessage() {
   textSize(width/80);
   textAlign(LEFT);
   text("Press [F] for fullscreen", 0 + width/100 , height - height/100);
-  text("Press [Q] for debug screen", 0 + width/100 , height - height/100 - 25);
+  text("Press [Tab] for debug screen", 0 + width/100 , height - height/100 - 25);
   pop();
 }
 
@@ -169,37 +161,13 @@ function fsMessage() {
 // Mainsprite mobility functions
 **************************************************************************/
 function drawMainSprite() {
-  //accelerate with shift
-  if ((keyIsDown(16)) && (stamina >= 0)) {
-    speedleftup -= 0.1;
-    speedrightdown += 0.1;
-    stamina -= 2.5;
-  } else {
-    speedleftup = 0;
-    speedrightdown = 0;
-    stamina += 2;
-  }
-  //keep stamina within 0 to 200 points
-  if (stamina >= 200) {
-    stamina = 200;
-  }
-  if (stamina <= 0) {
-    stamina = 0;
-  }
-  //if stamina runs out, cannot run anymore
-  if (stamina == 0) {
-    mainsprite.velocity.x = -4;
-    mainsprite.velocity.y = -4;
-    speedleftup = 0;
-    speedrightdown = 0;
-  }
-
+  mainsprite.maxSpeed = 10;
   //control mainsprite with WASD
   //left with A
   if (keyIsDown(65)) {
     mainsprite.changeAnimation('moving');
     mainsprite.mirrorX(-1);
-    mainsprite.velocity.x = -4 + speedleftup;
+    mainsprite.velocity.x = -4 + speedleft;
     facing = -1;
     isidle = 1;
   }
@@ -207,20 +175,20 @@ function drawMainSprite() {
   else if (keyIsDown(68)) {
     mainsprite.changeAnimation('moving');
     mainsprite.mirrorX(1);
-    mainsprite.velocity.x = 4 + speedrightdown;
+    mainsprite.velocity.x = 4 + speedright;
     facing = 1;
     isidle = 1;
   }
   //down with S
   else if (keyIsDown(83)) {
     mainsprite.changeAnimation('moving');
-    mainsprite.velocity.y = 4 + speedrightdown;
+    mainsprite.velocity.y = 4 + speeddown;
     isidle = 1;
   }
   //up with W
   else if (keyIsDown(87)) {
     mainsprite.changeAnimation('moving');
-    mainsprite.velocity.y = -4 + speedleftup;
+    mainsprite.velocity.y = -4 + speedup;
     isidle = 1;
   } else {
     mainsprite.changeAnimation('idle');
@@ -229,8 +197,64 @@ function drawMainSprite() {
     isidle = 0;
   }
 
+  // spacebar to use power
+  if ((keyIsDown(32)) && (stamina >= 0))  {
+    fill(hexArrayR[3]);
+    ellipse(mainsprite.position.x, mainsprite.position.y, 20, 20);
+    stamina -= 10;
+    mainsprite.velocity.x = 0;
+    mainsprite.velocity.y = 0;
+    speedleft = 0;
+    speedright = 0;
+    speedup = 0;
+    speeddown = 0;
+  }
+
+  //accelerate with shift
+  if ((keyIsDown(16)) && (keyIsDown(65)) && (stamina >= 0)) {
+    speedleft -= 0.1;
+    stamina -= 2.5;
+  } 
+  else if ((keyIsDown(16)) && (keyIsDown(68)) && (stamina >= 0)) {
+    speedright += 0.1;
+    stamina -= 2.5;
+  } 
+  else if ((keyIsDown(16)) && (keyIsDown(83)) && (stamina >= 0)) {
+    speeddown += 0.1;
+    stamina -= 2.5;
+  }
+  else if ((keyIsDown(16)) && (keyIsDown(87)) && (stamina >= 0)) {
+    speedup -= 0.1;
+    stamina -= 2.5;
+  }
+  else {
+    speedleft = 0;
+    speedright = 0;
+    speedup = 0;
+    speeddown = 0;
+    stamina += 2;
+  }
+
+  //keep stamina within 0 to 200 points
+  if (stamina >= 200) {
+    stamina = 200;
+  }
+  if (stamina <= 0) {
+    stamina = 0;
+  }
+
+  //if stamina runs out, cannot run anymore
+  if (stamina == 0) {
+    mainsprite.velocity.x = 0;
+    mainsprite.velocity.y = 0;
+    speedleft = 0;
+    speedright = 0;
+    speedup = 0;
+    speeddown = 0;
+  }
+
   //trapping the main sprite inside the screen width/height
- if (mainsprite.position.x < 0 + mainspriteW - mainspriteW/2)
+  if (mainsprite.position.x < 0 + mainspriteW - mainspriteW/2)
     mainsprite.position.x = 0 + mainspriteW - mainspriteW/2;
   if (mainsprite.position.y < 0 + mainspriteH/2)
     mainsprite.position.y = 0 + mainspriteH/2;
