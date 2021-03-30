@@ -2,4 +2,5 @@ ID,Name,PNGFilename,Text,x,y,visible
 0,Button 1,,1,200,614.4,yes
 1,Button 2,,2,400,614.4,yes
 2,Button 3,,3,600,614.4,yes
-3,Button 4,,4,800.00,614.4,yes
+3,Button 4,,4,800,614.4,yes
+4,Button 5,,5,1000,614.4,yes

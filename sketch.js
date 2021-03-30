@@ -31,6 +31,7 @@ const cl1 = 0;
 const cl2 = 1;
 const cl3 = 2;
 const cl4 = 3;
+const cl5 = 4;
 
 
 // Data
@@ -392,6 +393,16 @@ clickableButtonPressed = function () {
       clickH.play();
     }
   }
+
+  else if( this.id === cl5 ) {
+    if (drawFunction === state5) {
+      clickL.play();
+    } 
+    else {
+      drawFunction = state5;
+      clickH.play();
+    }
+  }
 }
 
 // color when mouse focus
@@ -407,7 +418,7 @@ clickableButtonOnOutside = function () {
   this.stroke = "#c2babe50";
   this.textColor = "#c2babe50";
   this.textSize = 25;
-  this.textFont = fontCairo;
+  this.textFont = fontChanga;
 }
 
 
@@ -429,4 +440,8 @@ state3 = function () {
 
 state4 = function () {
     text('State 4', 50, 50);
+}
+
+state5 = function () {
+    text('State 5', 50, 50);
 }
