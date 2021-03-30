@@ -18,6 +18,21 @@
 var debugScreen;
 var showDebugScreen = false;
 
+// Variable that is a function 
+var drawFunction;
+
+// Clickables
+// Manager class
+var clickablesManager;
+// Array of clickable objects
+var clickables;
+// indexes into the array (constants) - look at the clickableLayout.csv
+const cl1 = 0;
+const cl2 = 1;
+const cl3 = 2;
+const cl4 = 3;
+
+
 // Data
 var interactionTable;
 
@@ -30,10 +45,16 @@ hexArrayR[3] = '#EF4648';
 hexArrayR[4] = '#F36E38';
 hexArrayR[5] = '#F89E4C';
 
+var fontChanga;
+var fontCairo;
+
 // Images
 
 
 // Sounds
+
+var clickL;
+var clickH;
 
 
 // Buttons and timers
@@ -66,15 +87,21 @@ function preload() {
   // Debug
   debugScreen = new DebugScreen();
 
+  // Clickables
+  clickablesManager = new ClickableManager('assets/data/clickableLayout.csv');
+
   // Data
   // interactionTable = loadTable('data/interactionTable.csv', 'csv', 'header');
 
   // Fonts
+  fontChanga = loadFont('assets/font/Changa.otf');
+  fontCairo = loadFont('assets/font/Cairo.otf');
 
   // Images
 
   // Music and Sounds
-
+  clickL = loadSound('assets/sfx/click_low.mp3');
+  clickH = loadSound('assets/sfx/click_high.mp3');
 }
 
 /*************************************************************************
@@ -83,19 +110,34 @@ function preload() {
 
 function setup() {
   createCanvas(1366, 768);
+  textSize(25);
+  textFont(fontCairo);
+  fill(hexArrayR[5]);
+  noStroke();
 
   // Debug
   debugScreen.print("hi");
 
+  // State
+  // Set to first state for startup
+    drawFunction = state1;
+
+  // Clickables
+    // Setup the clickables = this will allocate the array
+    clickables = clickablesManager.setup();
+
+    // Call the function to setup additional information about the p5.clickables that are not in the array 
+    setupClickables(); 
+
   //////////////////// p5 play setup
 
-  // Sprites
-  mainsprite = createSprite(width/2, height/2, mainspriteW, mainspriteH);
+    // Sprites
+    mainsprite = createSprite(width/2, height/2, mainspriteW, mainspriteH);
 
-  // mainsprite
-  var mainspriteMove = mainsprite.addAnimation('idle',
-    'assets/img/mainsprite/idle_1.png', 'assets/img/mainsprite/idle_2.png', 'assets/img/mainsprite/idle_3.png');
-  mainsprite.addAnimation('moving', 'assets/img/mainsprite/walk_1.png', 'assets/img/mainsprite/walk_2.png', 'assets/img/mainsprite/walk_3.png', 'assets/img/mainsprite/walk_4.png', 'assets/img/mainsprite/walk_5.png');
+    // mainsprite
+    var mainspriteMove = mainsprite.addAnimation('idle',
+      'assets/img/mainsprite/idle_1.png', 'assets/img/mainsprite/idle_2.png', 'assets/img/mainsprite/idle_3.png');
+    mainsprite.addAnimation('moving', 'assets/img/mainsprite/walk_1.png', 'assets/img/mainsprite/walk_2.png', 'assets/img/mainsprite/walk_3.png', 'assets/img/mainsprite/walk_4.png', 'assets/img/mainsprite/walk_5.png');
  }
 
 /*************************************************************************
@@ -114,8 +156,15 @@ function draw() {
     debugScreen.draw();
   }
 
+  // Clickables
+  clickablesManager.draw();
+
+
+  // State
+  drawFunction();
+
   // fsMessage();
-  noCursor();
+  // noCursor();
 }
 
 
@@ -288,6 +337,96 @@ function drawStamina() {
   pop();
 }
 
+
+/*************************************************************************
+// Clickables
+**************************************************************************/
+// change individual fields of the clickables
+function setupClickables() {
+  // make same callback handlers for all 4 clickables
+  for( let i = 0; i < clickables.length; i++ ) {
+    clickables[i].onPress = clickableButtonPressed;
+    clickables[i].onHover = clickableButtonHover;
+    clickables[i].onOutside = clickableButtonOnOutside;
+  }
+}
+
+//--- CLICKABLE CALLBACK FUNCTIONS ----
+clickableButtonPressed = function () {
+  if( this.id === cl1 ) {
+    if (drawFunction === state1) {
+      clickL.play();
+    } 
+    else {
+      drawFunction = state1;
+      clickH.play();
+    }
+  }
+
+  else if( this.id === cl2 ) {
+    if (drawFunction === state2) {
+      clickL.play();
+    } 
+    else {
+      drawFunction = state2;
+      clickH.play();
+    }
+  }
+
+  else if( this.id === cl3 ) {
+    if (drawFunction === state3) {
+      clickL.play();
+    } 
+    else {
+      drawFunction = state3;
+      clickH.play();
+    }
+  }
+
+  else if( this.id === cl4 ) {
+    if (drawFunction === state4) {
+      clickL.play();
+    } 
+    else {
+      drawFunction = state4;
+      clickH.play();
+    }
+  }
+}
+
+// color when mouse focus
+clickableButtonHover = function () {
+  this.color = hexArrayR[0];
+  this.noTint = false;
+  this.tint = "#FF0000";
+}
+
+// color when no mouse focus
+clickableButtonOnOutside = function () {
+  this.color = "#5d465270";
+  this.stroke = "#c2babe50";
+  this.textColor = "#c2babe50";
+  this.textSize = 25;
+  this.textFont = fontCairo;
+}
+
+
 /*************************************************************************
 // States
 **************************************************************************/
+
+state1 = function () {
+    text('State 1', 50, 50);
+}
+
+state2 = function () {
+    text('State 2', 50, 50);
+}
+
+state3 = function () {
+    text('State 3', 50, 50);
+}
+
+state4 = function () {
+    text('State 4', 50, 50);
+}
