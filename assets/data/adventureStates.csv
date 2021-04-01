@@ -1,0 +1,5 @@
+StateName,Class,PNGFilename,CollisionFilename
+Atari,,assets/atariMaze.png,
+Corn,,assets/cornMaze.png,
+Rock,,assets/rockMaze.png,
+Scribble,,assets/scribbleMaze.png,

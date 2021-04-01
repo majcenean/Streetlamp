@@ -14,6 +14,13 @@
 /*************************************************************************
 // Global variables
 **************************************************************************/
+// adventure manager global  
+var adventureManager;
+
+// p5.pla7
+var playerSprite;
+var playerAnimation;
+
 // Debug
 var debugScreen;
 var showDebugScreen = false;
@@ -88,8 +95,9 @@ function preload() {
   // Debug
   debugScreen = new DebugScreen();
 
-  // Clickables
+  // Clickables and Adventure
   clickablesManager = new ClickableManager('assets/data/clickableLayout.csv');
+  adventureManager = new AdventureManager('assets/data/adventureStates.csv', 'assets/data/interactionTable.csv', 'assets/data/clickableLayout.csv');
 
   // Data
   // interactionTable = loadTable('data/interactionTable.csv', 'csv', 'header');
