@@ -84,7 +84,7 @@ var speedleft = 0;
 var speedright = 0;
 var speedup = 0;
 var speeddown = 0;
-var facing = 1;
+var facing = -1;
 var isidle = 0;
 var stamina = 200;
 
@@ -224,17 +224,17 @@ function drawMainSprite() {
   //left with A
   if (keyIsDown(65)) {
     mainsprite.changeAnimation('moving');
-    mainsprite.mirrorX(-1);
+    mainsprite.mirrorX(1);
     mainsprite.velocity.x = -4 + speedleft;
-    facing = -1;
+    facing = 1;
     isidle = 1;
   }
   //right with D
   else if (keyIsDown(68)) {
     mainsprite.changeAnimation('moving');
-    mainsprite.mirrorX(1);
+    mainsprite.mirrorX(-1);
     mainsprite.velocity.x = 4 + speedright;
-    facing = 1;
+    facing = -1;
     isidle = 1;
   }
   //down with S
@@ -326,6 +326,10 @@ function drawMainSprite() {
   noStroke();
   fill(25, 25, 25, 70);
   ellipse(mainsprite.position.x, mainsprite.position.y + mainspriteH/2, mainspriteW+mainspriteW/3, mainspriteH/6);
+  pop();
+  push();
+  fill('#ffffff10');
+  ellipse(mainsprite.position.x, mainsprite.position.y, 200, 200);
   pop();
 
   // if the shift key is down OR stamina is less than 180 pts; then draw the stamina bar above head of mainsprite
