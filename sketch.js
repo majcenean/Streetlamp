@@ -1,7 +1,7 @@
 /*************************************************************************
  ART385 Project 2
           by Maj Jenkins
-    March 24, 2021
+    April 20, 2021
 
     Overview:
     
@@ -14,72 +14,16 @@
 /*************************************************************************
 // Global variables
 **************************************************************************/
-// adventure manager global  
+// Adventure manager global  
 var adventureManager;
 
-// p5.pla7
+// p5.play
 var playerSprite;
 var playerAnimation;
+var playerSpriteW = 50;
+var playerSpriteH = 80;
 
-// Debug
-var debugScreen;
-var showDebugScreen = false;
-
-// Variable that is a function 
-var drawFunction;
-
-// Clickables
-// Manager class
-var clickablesManager;
-// Array of clickable objects
-var clickables;
-// indexes into the array (constants) - look at the clickableLayout.csv
-const cl1 = 0;
-const cl2 = 1;
-const cl3 = 2;
-const cl4 = 3;
-const cl5 = 4;
-
-
-// Data
-var interactionTable;
-
-// Style (Fonts, colors)
-var hexArrayR = [];
-hexArrayR[0] = '#582841';
-hexArrayR[1] = '#351827';
-hexArrayR[2] = '#CE2949';
-hexArrayR[3] = '#EF4648';
-hexArrayR[4] = '#F36E38';
-hexArrayR[5] = '#F89E4C';
-
-var fontChanga;
-var fontCairo;
-
-// Images
-
-
-// Sounds
-
-var clickL;
-var clickH;
-
-
-// Buttons and timers
-
-
-//////////////////// p5 play variables
-
-// Scene
-var SCENE_W;
-var SCENE_H;
-
-// Main Sprite
-var mainsprite;
-var mainspriteW = 50;
-var mainspriteH = 80;
-
-// Main Sprite Controls
+// PlayerSprite Controls
 var speedleft = 0;
 var speedright = 0;
 var speedup = 0;
@@ -88,180 +32,179 @@ var facing = -1;
 var isidle = 0;
 var stamina = 200;
 
+// Clickables: the manager class
+var clickablesManager;    // the manager class
+var clickables;           // an array of clickable objects
+
+// Indexes into the clickable array (constants)
+const playGameIndex = 0;
+
+
+// Colors
+var hexArrayR = [];
+hexArrayR[0] = '#582841';
+hexArrayR[1] = '#351827';
+hexArrayR[2] = '#CE2949';
+hexArrayR[3] = '#EF4648';
+hexArrayR[4] = '#F36E38';
+hexArrayR[5] = '#F89E4C';
+
+// Fonts
+var fontChanga;
+var fontCairo;
+
+// Sounds
+var clickL;
+var clickH;
+
+
 /*************************************************************************
 // Function preload
 **************************************************************************/
+// Allocate Adventure Manager with states table and interaction tables
 function preload() {
-  // Debug
-  debugScreen = new DebugScreen();
+	// Clickables and Adventure
+	clickablesManager = new ClickableManager('data/clickableLayout.csv');
+	adventureManager = new AdventureManager('data/adventureStates.csv', 'data/interactionTable.csv', 'data/clickableLayout.csv');
 
-  // Clickables and Adventure
-  clickablesManager = new ClickableManager('assets/data/clickableLayout.csv');
-  adventureManager = new AdventureManager('assets/data/adventureStates.csv', 'assets/data/interactionTable.csv', 'assets/data/clickableLayout.csv');
+	// Fonts
+	fontChanga = loadFont('font/Changa.otf');
+	fontCairo = loadFont('font/Cairo.otf');
 
-  // Data
-  // interactionTable = loadTable('data/interactionTable.csv', 'csv', 'header');
-
-  // Fonts
-  fontChanga = loadFont('assets/font/Changa.otf');
-  fontCairo = loadFont('assets/font/Cairo.otf');
-
-  // Images
-
-  // Music and Sounds
-  clickL = loadSound('assets/sfx/click_low.mp3');
-  clickH = loadSound('assets/sfx/click_high.mp3');
+	// Music and Sounds
+	clickL = loadSound('sfx/click_low.mp3');
+	clickH = loadSound('sfx/click_high.mp3');
 }
 
 /*************************************************************************
 // Function setup
 **************************************************************************/
-
 function setup() {
-  createCanvas(1366, 768);
-  textSize(25);
-  textFont(fontCairo);
-  fill(hexArrayR[5]);
-  noStroke();
+    createCanvas(1366, 768);
 
-  // Debug
-  debugScreen.print("hi");
+    // Style  ----------------------------------
+    textSize(25);
+    textFont(fontCairo);
+    fill(hexArrayR[5]);
 
-  // State
-  // Set to first state for startup
-    drawFunction = state1;
-
-  // Clickables
-    // Setup the clickables = this will allocate the array
+    // Clickables  ----------------------------------
+    // setup the clickables = this will allocate the array
     clickables = clickablesManager.setup();
 
-    // Call the function to setup additional information about the p5.clickables that are not in the array 
+    // Sprites  ----------------------------------
+    // create a sprite and add the 3 animations
+    playerSprite = createSprite(width/2, height/2, playerSpriteW, playerSpriteH);
+
+    // playerSprite
+    var playerSpriteMove = playerSprite.addAnimation('idle',
+    'assets/avatars/idle_1.png', 'assets/avatars/idle_2.png', 'assets/avatars/idle_3.png');
+    playerSprite.addAnimation('moving', 'assets/avatars/walk_1.png', 'assets/avatars/walk_2.png', 'assets/avatars/walk_3.png', 'assets/avatars/walk_4.png', 'assets/avatars/walk_5.png',);
+
+    // Adventure Manager  ----------------------------------
+    // Use this to track movement from room to room in adventureManager.draw()
+    adventureManager.setPlayerSprite(playerSprite);
+
+    // This is optional, but will manage turning visibility of buttons on/off
+    // based on the state name in the clickableLayout
+    adventureManager.setClickableManager(clickablesManager);
+
+    // This will load the images, go through state and interation tables, etc
+    adventureManager.setup();
+
+    // call OUR function to setup additional information about the p5.clickables
+    // that are not in the array 
     setupClickables(); 
-
-  //////////////////// p5 play setup
-
-    // Sprites
-    mainsprite = createSprite(width/2, height/2, mainspriteW, mainspriteH);
-
-    // mainsprite
-    var mainspriteMove = mainsprite.addAnimation('idle',
-      'assets/img/mainsprite/idle_1.png', 'assets/img/mainsprite/idle_2.png', 'assets/img/mainsprite/idle_3.png');
-    mainsprite.addAnimation('moving', 'assets/img/mainsprite/walk_1.png', 'assets/img/mainsprite/walk_2.png', 'assets/img/mainsprite/walk_3.png', 'assets/img/mainsprite/walk_4.png', 'assets/img/mainsprite/walk_5.png');
- }
+}
 
 /*************************************************************************
 // Function draw
 **************************************************************************/
-
 function draw() {
-  background(hexArrayR[0]);
+    // Draws background rooms and handles movement from one to another
+    adventureManager.draw();
 
-  // Draw the main sprite;
-  drawSprite(mainsprite);
-  drawMainSprite();
+    // Draw the p5.clickables, in front of the mazes but behind the sprites 
+    clickablesManager.draw();
 
-  // Debug (leave at bottom so it shows up on top)
-  if( showDebugScreen ) {
-    debugScreen.draw();
-  }
+    // No avatar for Splash screen or Instructions screen
+    if( adventureManager.getStateName() !== "Splash" && 
+        adventureManager.getStateName() !== "Instructions" ) {
+        
+    // responds to keydowns
+    moveSprite();
 
-  // Clickables
-  clickablesManager.draw();
-
-
-  // State
-  drawFunction();
-
-  // fsMessage();
-  // noCursor();
+    // this is a function of p5.js, not of this sketch
+    drawSprite(playerSprite);
+  } 
 }
 
-
-/*************************************************************************
-// Keypressed function
-**************************************************************************/
 function keyPressed() {
-  // Fullscreen
-  if (key === 'f') {
-    let fs = fullscreen();
+  // toggle fullscreen mode
+  if( key === 'f') {
+    fs = fullscreen();
     fullscreen(!fs);
+    return;
   }
 
-  // Debug
-  if( key === 'i') {
-    showDebugScreen = !showDebugScreen;
-  }
+  // Dispatch key events for adventure manager to move from state to 
+  // state or do special actions - this can be disabled for 
+  // NPC conversations or text entry   
 
-  // // States Interaction Table
-  // for (let i = 0; i < interactionTable.getRowCount(); i++) {
-  //   if(interactionTable.getString(i, 'CurrentState') === drawFunction.name ) {
-  //     if(interactionTable.getString(i, 'KeyTyped') === string(key) ) {
-  //       drawFunction = eval(interactionTable.getString(i, 'NextState'));
-  //     }
-  //   }
-  // }
+  // dispatch to elsewhere
+  adventureManager.keyPressed(key); 
+}
 
- }
-
- // Fullscreen message
-function fsMessage() {
-  push();
-  fill(255);
-  noStroke();
-  textSize(width/80);
-  textAlign(LEFT);
-  text("Press [F] for fullscreen", 0 + width/100 , height - height/100);
-  text("Press [Tab] for debug screen", 0 + width/100 , height - height/100 - 25);
-  pop();
+function mouseReleased() {
+  adventureManager.mouseReleased();
 }
 
 /*************************************************************************
-// Mainsprite mobility functions
+// playerSprite mobility functions
 **************************************************************************/
-function drawMainSprite() {
-  mainsprite.maxSpeed = 10;
-  //control mainsprite with WASD
+function moveSprite() {
+  playerSprite.maxSpeed = 10;
+  //control playerSprite with WASD
   //left with A
   if (keyIsDown(65)) {
-    mainsprite.changeAnimation('moving');
-    mainsprite.mirrorX(1);
-    mainsprite.velocity.x = -4 + speedleft;
+    playerSprite.changeAnimation('moving');
+    playerSprite.mirrorX(1);
+    playerSprite.velocity.x = -4 + speedleft;
     facing = 1;
     isidle = 1;
   }
   //right with D
   else if (keyIsDown(68)) {
-    mainsprite.changeAnimation('moving');
-    mainsprite.mirrorX(-1);
-    mainsprite.velocity.x = 4 + speedright;
+    playerSprite.changeAnimation('moving');
+    playerSprite.mirrorX(-1);
+    playerSprite.velocity.x = 4 + speedright;
     facing = -1;
     isidle = 1;
   }
   //down with S
   else if (keyIsDown(83)) {
-    mainsprite.changeAnimation('moving');
-    mainsprite.velocity.y = 4 + speeddown;
+    playerSprite.changeAnimation('moving');
+    playerSprite.velocity.y = 4 + speeddown;
     isidle = 1;
   }
   //up with W
   else if (keyIsDown(87)) {
-    mainsprite.changeAnimation('moving');
-    mainsprite.velocity.y = -4 + speedup;
+    playerSprite.changeAnimation('moving');
+    playerSprite.velocity.y = -4 + speedup;
     isidle = 1;
   } else {
-    mainsprite.changeAnimation('idle');
-    mainsprite.velocity.x = 0;
-    mainsprite.velocity.y = 0;
+    playerSprite.changeAnimation('idle');
+    playerSprite.velocity.x = 0;
+    playerSprite.velocity.y = 0;
     isidle = 0;
   }
 
   // spacebar to use power
   if ((keyIsDown(32)) && (stamina >= 0))  {
     fill(hexArrayR[3]);
-    ellipse(mainsprite.position.x, mainsprite.position.y, 20, 20);
+    ellipse(playerSprite.position.x, playerSprite.position.y, 20, 20);
     stamina -= 10;
-    mainsprite.velocity.x = 0;
-    mainsprite.velocity.y = 0;
+    playerSprite.velocity.x = 0;
+    playerSprite.velocity.y = 0;
     speedleft = 0;
     speedright = 0;
     speedup = 0;
@@ -303,8 +246,8 @@ function drawMainSprite() {
 
   //if stamina runs out, cannot run anymore
   if (stamina == 0) {
-    mainsprite.velocity.x = 0;
-    mainsprite.velocity.y = 0;
+    playerSprite.velocity.x = 0;
+    playerSprite.velocity.y = 0;
     speedleft = 0;
     speedright = 0;
     speedup = 0;
@@ -312,27 +255,29 @@ function drawMainSprite() {
   }
 
   //trapping the main sprite inside the screen width/height
-  if (mainsprite.position.x < 0 + mainspriteW - mainspriteW/2)
-    mainsprite.position.x = 0 + mainspriteW - mainspriteW/2;
-  if (mainsprite.position.y < 0 + mainspriteH/2)
-    mainsprite.position.y = 0 + mainspriteH/2;
-  if (mainsprite.position.x > width - mainspriteW + mainspriteW/2)
-    mainsprite.position.x = width - mainspriteW + mainspriteW/2;
-  if (mainsprite.position.y > height - mainspriteH/2)
-    mainsprite.position.y = height - mainspriteH/2;
+  // if (playerSprite.position.x < 0 + playerSpriteW - playerSpriteW/2)
+  //   playerSprite.position.x = 0 + playerSpriteW - playerSpriteW/2;
+  // if (playerSprite.position.y < 0 + playerSpriteH/2)
+  //   playerSprite.position.y = 0 + playerSpriteH/2;
+  // if (playerSprite.position.x > width - playerSpriteW + playerSpriteW/2)
+  //   playerSprite.position.x = width - playerSpriteW + playerSpriteW/2;
+  // if (playerSprite.position.y > height - playerSpriteH/2)
+  //   playerSprite.position.y = height - playerSpriteH/2;
 
   //shadow underneath the main sprite
   push();
   noStroke();
   fill(25, 25, 25, 70);
-  ellipse(mainsprite.position.x, mainsprite.position.y + mainspriteH/2, mainspriteW+mainspriteW/3, mainspriteH/6);
+  ellipse(playerSprite.position.x, playerSprite.position.y + playerSpriteH/2, playerSpriteW+playerSpriteW/3, playerSpriteH/6);
   pop();
+  // little ellipse to see better
   push();
   fill('#ffffff10');
-  ellipse(mainsprite.position.x, mainsprite.position.y, 200, 200);
+  noStroke();
+  ellipse(playerSprite.position.x, playerSprite.position.y, 200, 200);
   pop();
 
-  // if the shift key is down OR stamina is less than 180 pts; then draw the stamina bar above head of mainsprite
+  // if the shift key is down OR stamina is less than 180 pts; then draw the stamina bar above head of playerSprite
   if ((keyIsDown(16)) || (stamina <= 180)) {
     // draw the stamina bar
     drawStamina();
@@ -344,19 +289,17 @@ function drawStamina() {
   rectMode(CORNER);
   noStroke();
   fill(hexArrayR[1]);
-  rect(mainsprite.position.x - mainspriteW/1.5, mainsprite.position.y - mainspriteH+mainspriteH/10, 210/3, 15);
+  rect(playerSprite.position.x - playerSpriteW/1.5, playerSprite.position.y - playerSpriteH+playerSpriteH/10, 210/3, 15);
   fill(hexArrayR[5]);
-  rect(mainsprite.position.x + 15/4 - mainspriteW/1.5, mainsprite.position.y + 15/4 - mainspriteH+mainspriteH/10, stamina/3, 7.5);
+  rect(playerSprite.position.x + 15/4 - playerSpriteW/1.5, playerSprite.position.y + 15/4 - playerSpriteH+playerSpriteH/10, stamina/3, 7.5);
   pop();
 }
-
 
 /*************************************************************************
 // Clickables
 **************************************************************************/
-// change individual fields of the clickables
 function setupClickables() {
-  // make same callback handlers for all 4 clickables
+  // All clickables to have same effects
   for( let i = 0; i < clickables.length; i++ ) {
     clickables[i].onPress = clickableButtonPressed;
     clickables[i].onHover = clickableButtonHover;
@@ -364,67 +307,12 @@ function setupClickables() {
   }
 }
 
-//--- CLICKABLE CALLBACK FUNCTIONS ----
-clickableButtonPressed = function () {
-  if( this.id === cl1 ) {
-    if (drawFunction === state1) {
-      clickL.play();
-    } 
-    else {
-      drawFunction = state1;
-      clickH.play();
-    }
-  }
-
-  else if( this.id === cl2 ) {
-    if (drawFunction === state2) {
-      clickL.play();
-    } 
-    else {
-      drawFunction = state2;
-      clickH.play();
-    }
-  }
-
-  else if( this.id === cl3 ) {
-    if (drawFunction === state3) {
-      clickL.play();
-    } 
-    else {
-      drawFunction = state3;
-      clickH.play();
-    }
-  }
-
-  else if( this.id === cl4 ) {
-    if (drawFunction === state4) {
-      clickL.play();
-    } 
-    else {
-      drawFunction = state4;
-      clickH.play();
-    }
-  }
-
-  else if( this.id === cl5 ) {
-    if (drawFunction === state5) {
-      clickL.play();
-    } 
-    else {
-      drawFunction = state5;
-      clickH.play();
-    }
-  }
-}
-
-// color when mouse focus
 clickableButtonHover = function () {
   this.color = hexArrayR[0];
   this.noTint = false;
   this.tint = "#FF0000";
 }
 
-// color when no mouse focus
 clickableButtonOnOutside = function () {
   this.color = "#5d465270";
   this.stroke = "#c2babe50";
@@ -433,27 +321,107 @@ clickableButtonOnOutside = function () {
   this.textFont = fontChanga;
 }
 
+clickableButtonPressed = function() {
+  // Sound (before anything is called)
+  clickH.play();
+
+  // These clickables are ones that change the state
+  // so they route to the adventure manager to do this
+  adventureManager.clickablePressed(this.name);
+}
 
 /*************************************************************************
-// States
+// Subclasses
 **************************************************************************/
+// Instructions screen has a background image, loaded from the adventureStates table.
+// It is subclassed from PNGRoom, which means 
+// all the loading, unloading and drawing of that class can be used. 
+// We call super() to call the super class's function as needed
+class InstructionsScreen extends PNGRoom {
+  // Preload is where we define OUR variables
+  preload() {
+    // These are out variables in the InstructionsScreen class
+    this.textBoxWidth = (width/6)*4;
+    this.textBoxHeight = (height/6)*4; 
 
-state1 = function () {
-    text('State 1', 50, 50);
+    // Hard-coded, but this could be loaded from a file if we wanted to be more elegant
+    this.instructionsText = "You are navigating through the interior space of your moods. There is no goal to this game, but just a chance to explore various things that might be going on in your head. Use the ARROW keys to navigate your avatar around.";
+  }
+
+  // Call the PNGRoom superclass's draw function to draw the background image
+  // and draw our instructions on top of this
+  draw() {
+    // tint down background image so text is more readable
+    tint(128);
+      
+    // this calls PNGRoom.draw()
+    super.draw();
+      
+    // text draw settings
+    fill(255);
+    textAlign(CENTER);
+    textSize(30);
+
+    // Draw text in a box
+    text(this.instructionsText, width/6, height/6, this.textBoxWidth, this.textBoxHeight );
+  }
 }
 
-state2 = function () {
-    text('State 2', 50, 50);
-}
+// In the FeedMeRoom, you have a number of NPCs. We'll eventually make them
+// moving, but for now, they are static. If you run into the NPC, you
+// "die" and get teleported back to Start
+class FeedMeRoom extends PNGRoom {
+  // preload() gets called once upon startup
+  // We load ONE animation and create 20 NPCs
+  // 
+  preload() {
+     // load the animation just one time
+    this.NPCAnimation = loadAnimation('assets/NPCs/bubbly0001.png', 'assets/NPCs/bubbly0004.png');
+    
+    // this is a type from p5play, so we can do operations on all sprites
+    // at once
+    this.NPCgroup = new Group;
 
-state3 = function () {
-    text('State 3', 50, 50);
-}
+    // change this number for more or less
+    this.numNPCs = 20;
 
-state4 = function () {
-    text('State 4', 50, 50);
-}
+    // is an array of sprites, note we keep this array because
+    // later I will add movement to all of them
+    this.NPCSprites = [];
 
-state5 = function () {
-    text('State 5', 50, 50);
+    // this will place them randomly in the room
+    for( let i = 0; i < this.numNPCs; i++ ) {
+      // random x and random y position for each sprite
+      let randX  = random(100, width-100);
+      let randY = random(100, height-100);
+
+      // create the sprite
+      this.NPCSprites[i] = createSprite( randX, randY, 80, 80);
+    
+      // add the animation to it (important to load the animation just one time)
+      this.NPCSprites[i].addAnimation('regular', this.NPCAnimation );
+
+      // add to the group
+      this.NPCgroup.add(this.NPCSprites[i]);
+    }
+  }
+
+  // pass draw function to superclass, then draw sprites, then check for overlap
+  draw() {
+    // PNG room draw
+    super.draw();
+
+    // draws all the sprites in the group
+    this.NPCgroup.draw();
+
+    // checks for overlap with ANY sprite in the group, if this happens
+    // our class's die() function gets called
+    playerSprite.overlap(this.NPCgroup, this.die);
+  }
+
+  // gets called when player sprite collides with an NPC
+  // teleport back to start
+  die() {
+    adventureManager.changeState("Map8");
+  }
 }
