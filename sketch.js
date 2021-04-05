@@ -28,7 +28,7 @@ var speedleft = 0;
 var speedright = 0;
 var speedup = 0;
 var speeddown = 0;
-var facing = -1;
+var facing = 1;
 var isidle = 0;
 var stamina = 200;
 
@@ -100,8 +100,8 @@ function setup() {
 
     // playerSprite
     var playerSpriteMove = playerSprite.addAnimation('idle',
-    'assets/avatars/idle_1.png', 'assets/avatars/idle_2.png', 'assets/avatars/idle_3.png');
-    playerSprite.addAnimation('moving', 'assets/avatars/walk_1.png', 'assets/avatars/walk_2.png', 'assets/avatars/walk_3.png', 'assets/avatars/walk_4.png', 'assets/avatars/walk_5.png',);
+    'assets/avatars/idle_1.png');
+    playerSprite.addAnimation('moving', 'assets/avatars/walk_1.png', 'assets/avatars/walk_2.png', 'assets/avatars/walk_3.png', 'assets/avatars/walk_4.png', 'assets/avatars/walk_5.png', 'assets/avatars/walk_6.png','assets/avatars/walk_7.png', 'assets/avatars/walk_8.png',);
 
     // Adventure Manager  ----------------------------------
     // Use this to track movement from room to room in adventureManager.draw()
@@ -170,17 +170,17 @@ function moveSprite() {
   //left with A
   if (keyIsDown(65)) {
     playerSprite.changeAnimation('moving');
-    playerSprite.mirrorX(1);
+    playerSprite.mirrorX(-1);
     playerSprite.velocity.x = -4 + speedleft;
-    facing = 1;
+    facing = -1;
     isidle = 1;
   }
   //right with D
   else if (keyIsDown(68)) {
     playerSprite.changeAnimation('moving');
-    playerSprite.mirrorX(-1);
+    playerSprite.mirrorX(1);
     playerSprite.velocity.x = 4 + speedright;
-    facing = -1;
+    facing = 1;
     isidle = 1;
   }
   //down with S
