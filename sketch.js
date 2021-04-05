@@ -32,6 +32,9 @@ var facing = -1;
 var isidle = 0;
 var stamina = 200;
 
+// House
+var houseSprite;
+
 // Clickables: the manager class
 var clickablesManager;    // the manager class
 var clickables;           // an array of clickable objects
@@ -277,9 +280,11 @@ function moveSprite() {
   ellipse(playerSprite.position.x, playerSprite.position.y, 200, 200);
   pop();
 
-  // if the shift key is down OR stamina is less than 180 pts; then draw the stamina bar above head of playerSprite
-  if ((keyIsDown(16)) || (stamina <= 180)) {
+  // if the shift key is down AND stamina is less than 180 pts; then draw the stamina bar above head of playerSprite
+  if ((keyIsDown(16)) && (stamina <= 190)) {
     // draw the stamina bar
+    drawStamina();
+  } else if (stamina <= 180) {
     drawStamina();
   }
 }
@@ -422,6 +427,36 @@ class FeedMeRoom extends PNGRoom {
   // gets called when player sprite collides with an NPC
   // teleport back to start
   die() {
-    adventureManager.changeState("Map8");
+    adventureManager.changeState("Map12");
   }
 }
+
+
+
+// -----------------
+
+class Map12Room extends PNGRoom {
+  preload() {
+    var houseImg = loadImage('assets/buildings/house.png');
+    // this.houseAppearance = loadAnimation('assets/buildings/house.png');
+    this.houseSprite = createSprite(900, 600, 80, 80);
+    // this.houseSprite.addAnimation('normal', this.houseAppearance);
+    this.houseSprite.addImage(houseImg);
+
+
+    // this.boxSprite = createSprite(100, 150, 50, 100);
+    // this.boxSprite.shapeColor = color(222, 125, 2);
+  }
+
+  draw() {
+    super.draw();
+    this.houseSprite.draw();
+    // this.boxSprite.draw();
+    playerSprite.overlap(this.houseSprite, this.enter);
+  }
+
+  enter() {
+    adventureManager.changeState("House");
+  }
+}
+
