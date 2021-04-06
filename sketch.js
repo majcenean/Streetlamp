@@ -20,8 +20,8 @@ var adventureManager;
 // p5.play
 var playerSprite;
 var playerAnimation;
-var playerSpriteW = 50;
-var playerSpriteH = 80;
+var playerSpriteW = 25;
+var playerSpriteH = 40;
 
 // PlayerSprite Controls
 var speedleft = 0;
@@ -96,7 +96,7 @@ function setup() {
 
     // Sprites  ----------------------------------
     // create a sprite and add the 3 animations
-    playerSprite = createSprite(width/2, height/2, playerSpriteW, playerSpriteH);
+    playerSprite = createSprite(615, 310, playerSpriteW, playerSpriteH);
 
     // playerSprite
     var playerSpriteMove = playerSprite.addAnimation('idle',
@@ -294,9 +294,10 @@ function drawStamina() {
   rectMode(CORNER);
   noStroke();
   fill(hexArrayR[1]);
-  rect(playerSprite.position.x - playerSpriteW/1.5, playerSprite.position.y - playerSpriteH+playerSpriteH/10, 210/3, 15);
+  rect(playerSprite.position.x - playerSpriteW, 
+    playerSprite.position.y - playerSpriteH - 50, 210/3, 15);
   fill(hexArrayR[5]);
-  rect(playerSprite.position.x + 15/4 - playerSpriteW/1.5, playerSprite.position.y + 15/4 - playerSpriteH+playerSpriteH/10, stamina/3, 7.5);
+  rect(playerSprite.position.x + 15/4 - playerSpriteW, playerSprite.position.y + 15/4 - playerSpriteH - 50, stamina/3, 7.5);
   pop();
 }
 
