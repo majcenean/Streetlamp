@@ -96,7 +96,7 @@ function setup() {
 
     // Sprites  ----------------------------------
     // create a sprite and add the 3 animations
-    playerSprite = createSprite(615, 310, playerSpriteW, playerSpriteH);
+    playerSprite = createSprite(744, 543, playerSpriteW, playerSpriteH);
 
     // playerSprite
     var playerSpriteMove = playerSprite.addAnimation('idle',
@@ -436,6 +436,8 @@ class FeedMeRoom extends PNGRoom {
 
 // -----------------
 
+// Set Map12 in Adventure States to Map12Room (not PNGRoom)
+
 class Map12Room extends PNGRoom {
   preload() {
     var houseImg = loadImage('assets/buildings/house.png');
@@ -445,15 +447,15 @@ class Map12Room extends PNGRoom {
     this.houseSprite.addImage(houseImg);
 
 
-    // this.boxSprite = createSprite(100, 150, 50, 100);
-    // this.boxSprite.shapeColor = color(222, 125, 2);
+    this.boxSprite = createSprite(100, 150, 50, 100);
+    this.boxSprite.shapeColor = color(222, 125, 2);
   }
 
   draw() {
     super.draw();
     this.houseSprite.draw();
     // this.boxSprite.draw();
-    playerSprite.overlap(this.houseSprite, this.enter);
+    // playerSprite.overlap(this.houseSprite, this.enter);
   }
 
   enter() {
