@@ -12,8 +12,8 @@ Map8,PNGRoom,assets/rooms/map_8.png,data/cl/map8.csv
 Map9,PNGRoom,assets/rooms/map_9.png,data/cl/map9.csv
 Map10,PNGRoom,assets/rooms/map_10.png,data/cl/map10.csv
 Map11,PNGRoom,assets/rooms/map_11.png,data/cl/map11.csv
-Map12,PNGRoom,assets/rooms/map_12.png,data/cl/map12.csv
+Map12,Map12Room,assets/rooms/map_12.png,data/cl/map12.csv
 Map13,PNGRoom,assets/rooms/map_13.png,data/cl/map13.csv
 Map14,PNGRoom,assets/rooms/map_14.png,data/cl/map14.csv
 Map15,PNGRoom,assets/rooms/map_15.png,data/cl/map15.csv
-House,PNGRoom,assets/rooms/house.png,
+House,PNGRoom,assets/rooms/house.png,data/cl/house.csv

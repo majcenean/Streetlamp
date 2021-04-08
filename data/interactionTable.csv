@@ -1,6 +1,6 @@
 CurrentState,KeyTyped,KeyCode,MouseEvent,ClickableName,MapDirection,NextState
 Splash,,,mouseReleased,,,Instructions
-Instructions,,,,StartGame,,Map12
+Instructions,,,,StartGame,,House
 Map1,,,,,E,Map2
 Map1,,,,,S,Map4
 Map2,,,,,W,Map1

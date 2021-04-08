@@ -22,6 +22,8 @@ var playerSprite;
 var playerAnimation;
 var playerSpriteW = 25;
 var playerSpriteH = 40;
+var playerSpriteX = 770;
+var playerSpriteY = 543;
 
 // PlayerSprite Controls
 var speedleft = 0;
@@ -31,9 +33,6 @@ var speeddown = 0;
 var facing = 1;
 var isidle = 0;
 var stamina = 200;
-
-// House
-var houseSprite;
 
 // Clickables: the manager class
 var clickablesManager;    // the manager class
@@ -45,15 +44,18 @@ const playGameIndex = 0;
 
 // Colors
 var hexArrayR = [];
-hexArrayR[0] = '#582841';
-hexArrayR[1] = '#351827';
-hexArrayR[2] = '#CE2949';
-hexArrayR[3] = '#EF4648';
-hexArrayR[4] = '#F36E38';
-hexArrayR[5] = '#F89E4C';
+hexArrayR[0] = '#98201B';
+hexArrayR[1] = '#721814';
+hexArrayR[2] = '#458C6F';
+hexArrayR[3] = '#F4A93D';
+hexArrayR[4] = '#53E0BF';
+hexArrayR[5] = '#222222';
+hexArrayR[6] = '#4E4E4E';
+hexArrayR[7] = '#FDF1E0';
 
 // Fonts
 var fontChanga;
+var fontChangaBold;
 var fontCairo;
 
 // Sounds
@@ -73,6 +75,7 @@ function preload() {
 	// Fonts
 	fontChanga = loadFont('font/Changa.otf');
 	fontCairo = loadFont('font/Cairo.otf');
+  fontChangaBold = loadFont('font/Changa_ExtraBold.otf');
 
 	// Music and Sounds
 	clickL = loadSound('sfx/click_low.mp3');
@@ -95,13 +98,15 @@ function setup() {
     clickables = clickablesManager.setup();
 
     // Sprites  ----------------------------------
-    // create a sprite and add the 3 animations
-    playerSprite = createSprite(744, 543, playerSpriteW, playerSpriteH);
-
-    // playerSprite
+    // Player Sprite
+    playerSprite = createSprite(playerSpriteX, playerSpriteY, playerSpriteW, playerSpriteH);
     var playerSpriteMove = playerSprite.addAnimation('idle',
     'assets/avatars/idle_1.png');
     playerSprite.addAnimation('moving', 'assets/avatars/walk_1.png', 'assets/avatars/walk_2.png', 'assets/avatars/walk_3.png', 'assets/avatars/walk_4.png', 'assets/avatars/walk_5.png', 'assets/avatars/walk_6.png','assets/avatars/walk_7.png', 'assets/avatars/walk_8.png',);
+
+    // Enemy Sprite
+    creepSprite1 = createSprite(playerSpriteX + 300, playerSpriteY, playerSpriteW, playerSpriteH);
+    creepSprite1.addAnimation('regular',  loadAnimation('assets/NPCs/bubbly0001.png'));
 
     // Adventure Manager  ----------------------------------
     // Use this to track movement from room to room in adventureManager.draw()
@@ -129,16 +134,35 @@ function draw() {
     // Draw the p5.clickables, in front of the mazes but behind the sprites 
     clickablesManager.draw();
 
-    // No avatar for Splash screen or Instructions screen
+    // No avatar shows up on Splash screen or Instructions screen
     if( adventureManager.getStateName() !== "Splash" && 
         adventureManager.getStateName() !== "Instructions" ) {
         
-    // responds to keydowns
+    // Sprites
+    // Player sprite responds to key commands
     moveSprite();
 
-    // this is a function of p5.js, not of this sketch
+    // Debug to see player position
+    showPlayerPos();
+
+    // Draw player sprite
     drawSprite(playerSprite);
+
+
+    if( adventureManager.getStateName() !== "House") {
+      // Draw enemy NPCs
+      drawEnemyNPCs();
+      drawSprite(creepSprite1);
+    }
   } 
+}
+
+function showPlayerPos() {
+  push();
+  fill(255);
+  text(playerSprite.position.x, 20, 40);
+  text(playerSprite.position.y, 20, 70);
+  pop();
 }
 
 function keyPressed() {
@@ -293,10 +317,10 @@ function drawStamina() {
   push();
   rectMode(CORNER);
   noStroke();
-  fill(hexArrayR[1]);
+  fill(hexArrayR[6]);
   rect(playerSprite.position.x - playerSpriteW, 
     playerSprite.position.y - playerSpriteH - 50, 210/3, 15);
-  fill(hexArrayR[5]);
+  fill(hexArrayR[4]);
   rect(playerSprite.position.x + 15/4 - playerSpriteW, playerSprite.position.y + 15/4 - playerSpriteH - 50, stamina/3, 7.5);
   pop();
 }
@@ -426,9 +450,9 @@ class FeedMeRoom extends PNGRoom {
   }
 
   // gets called when player sprite collides with an NPC
-  // teleport back to start
   die() {
-    adventureManager.changeState("Map12");
+    print('you died lol');
+    // adventureManager.changeState("Map12");
   }
 }
 
@@ -436,26 +460,56 @@ class FeedMeRoom extends PNGRoom {
 
 // -----------------
 
-// Set Map12 in Adventure States to Map12Room (not PNGRoom)
-
 class Map12Room extends PNGRoom {
   preload() {
-    var houseImg = loadImage('assets/buildings/house.png');
-    // this.houseAppearance = loadAnimation('assets/buildings/house.png');
-    this.houseSprite = createSprite(900, 600, 80, 80);
-    // this.houseSprite.addAnimation('normal', this.houseAppearance);
-    this.houseSprite.addImage(houseImg);
+      // House Sprite
+      this.drawHouseX = 770;
+      this.drawHouseY = 372.4025 - 478/5;
+      this.houseSprite = createSprite( this.drawHouseX, this.drawHouseY, 227, 478);
+      this.houseSprite.addAnimation('regular',  loadAnimation('assets/buildings/house.png'));
+      this.houseSpriteCollide = createSprite(this.drawHouseX, 519, 100, 20);
 
+      this.houseSpriteA = createSprite( this.drawHouseX - 250, this.drawHouseY, 228, 479);
+      this.houseSpriteA.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
 
-    this.boxSprite = createSprite(100, 150, 50, 100);
-    this.boxSprite.shapeColor = color(222, 125, 2);
+      this.houseSpriteB = createSprite( this.drawHouseX + 250, this.drawHouseY, 228, 479);
+      this.houseSpriteB.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
+
+    //   // Creep Sprite
+    //   this.drawCreep1X = 770 + 300;
+    //   this.drawCreep1Y = 543;
+
+    //   this.creepSprite1 = createSprite( this.drawCreep1X, this.drawCreep1Y, 50, 80);
+    //   this.creepSprite1.addAnimation('regular',  loadAnimation('assets/NPCs/bubbly0001.png'));
+
+    // // Moving the Creep
+    //   this.creepSprite1.attractionPoint(0.2, playerSprite.position.x, playerSprite.position.y);
+    //   this.creepSprite1.maxSpeed = 4;
   }
 
   draw() {
     super.draw();
-    this.houseSprite.draw();
-    // this.boxSprite.draw();
-    // playerSprite.overlap(this.houseSprite, this.enter);
+    drawSprite(this.houseSprite);
+    drawSprite(this.houseSpriteA);
+    drawSprite(this.houseSpriteB);
+    // drawSprite(this.creepSprite1);
+
+    // Press E to enter text
+    if (playerSprite.overlap(this.houseSpriteCollide)) {
+      push();
+      textAlign(CENTER);
+      textFont(fontChangaBold);
+      fill(hexArrayR[7]);
+      stroke(hexArrayR[5]);
+      strokeWeight(3);
+      textSize(22);
+      text('Press [E] to enter', playerSprite.position.x, playerSprite.position.y - playerSpriteH - 50);
+      pop();
+    }
+    // Enter code
+    if (playerSprite.overlap(this.houseSpriteCollide) && keyIsDown(69)) {
+      this.enter();
+    }
   }
 
   enter() {
@@ -463,3 +517,7 @@ class Map12Room extends PNGRoom {
   }
 }
 
+function drawEnemyNPCs() {
+  creepSprite1.attractionPoint(0.2, playerSprite.position.x, playerSprite.position.y);
+  creepSprite1.maxSpeed = 2;
+}
