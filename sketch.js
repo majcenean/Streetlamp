@@ -31,6 +31,7 @@ var speedright = 0;
 var speedup = 0;
 var speeddown = 0;
 var facing = 1;
+var facingupdown = 1;
 var isidle = 0;
 var stamina = 200;
 
@@ -100,13 +101,18 @@ function setup() {
     // Sprites  ----------------------------------
     // Player Sprite
     playerSprite = createSprite(playerSpriteX, playerSpriteY, playerSpriteW, playerSpriteH);
-    var playerSpriteMove = playerSprite.addAnimation('idle',
-    'assets/avatars/idle_1.png');
+    var playerSpriteMove = playerSprite.addAnimation('idle_f',
+    'assets/avatars/idle_f_1.png', 'assets/avatars/idle_f_2.png', 'assets/avatars/idle_f_3.png', 'assets/avatars/idle_f_2.png', 'assets/avatars/idle_f_1.png');
     playerSprite.addAnimation('moving', 'assets/avatars/walk_1.png', 'assets/avatars/walk_2.png', 'assets/avatars/walk_3.png', 'assets/avatars/walk_4.png', 'assets/avatars/walk_5.png', 'assets/avatars/walk_6.png','assets/avatars/walk_7.png', 'assets/avatars/walk_8.png',);
+    playerSprite.addAnimation('idle_b',
+    'assets/avatars/idle_b_1.png', 'assets/avatars/idle_b_2.png', 'assets/avatars/idle_b_3.png', 'assets/avatars/idle_b_2.png', 'assets/avatars/idle_b_1.png');
 
     // Enemy Sprite
     creepSprite1 = createSprite(playerSpriteX + 300, playerSpriteY, playerSpriteW, playerSpriteH);
-    creepSprite1.addAnimation('regular',  loadAnimation('assets/NPCs/bubbly0001.png'));
+    creepSprite1.addAnimation('brunet',  loadAnimation('assets/NPCs/creep_b_1.png', 'assets/NPCs/creep_b_2.png'));
+
+    creepSprite2 = createSprite(playerSpriteX + 350, playerSpriteY, playerSpriteW, playerSpriteH);
+    creepSprite2.addAnimation('blond',  loadAnimation('assets/NPCs/creep_y_1.png', 'assets/NPCs/creep_y_2.png'));
 
     // Adventure Manager  ----------------------------------
     // Use this to track movement from room to room in adventureManager.draw()
@@ -152,8 +158,9 @@ function draw() {
     if( adventureManager.getStateName() !== "House") {
       // Draw enemy NPCs
       drawEnemyNPCs();
-      drawSprite(creepSprite1);
     }
+
+    frameRate(47);
   } 
 }
 
@@ -212,14 +219,23 @@ function moveSprite() {
     playerSprite.changeAnimation('moving');
     playerSprite.velocity.y = 4 + speeddown;
     isidle = 1;
+    facingupdown = 1;
   }
   //up with W
   else if (keyIsDown(87)) {
     playerSprite.changeAnimation('moving');
     playerSprite.velocity.y = -4 + speedup;
     isidle = 1;
-  } else {
-    playerSprite.changeAnimation('idle');
+    facingupdown = 0;
+  } 
+  else if (facingupdown === 0) {
+    playerSprite.changeAnimation('idle_b');
+    playerSprite.velocity.x = 0;
+    playerSprite.velocity.y = 0;
+    isidle = 0;
+  }
+  else if (facingupdown === 1) {
+    playerSprite.changeAnimation('idle_f');
     playerSprite.velocity.x = 0;
     playerSprite.velocity.y = 0;
     isidle = 0;
@@ -518,6 +534,27 @@ class Map12Room extends PNGRoom {
 }
 
 function drawEnemyNPCs() {
-  creepSprite1.attractionPoint(0.2, playerSprite.position.x, playerSprite.position.y);
-  creepSprite1.maxSpeed = 2;
+   setEnemySprite(creepSprite1);
+   setEnemySprite(creepSprite2);
+}
+
+function setEnemySprite(spritename) {
+  // Set attraction point
+  spritename.attractionPoint(0.2, playerSprite.position.x, playerSprite.position.y);
+  spritename.maxSpeed = 2;
+
+  // Set animation flipping
+  if(playerSprite.position.x < spritename.position.x - 10) {
+    spritename.mirrorX(1);
+  } 
+  else if(playerSprite.position.x > spritename.position.x - 10) {
+    spritename.mirrorX(-1);
+  }
+
+  // Set collisions with one another (so do not overlap)
+  spritename.bounce(creepSprite1);
+  spritename.bounce(creepSprite2);
+
+  // Draw Sprite
+  drawSprite(spritename);
 }
