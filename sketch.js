@@ -17,6 +17,10 @@
 // Adventure manager global  
 var adventureManager;
 
+// Scene_W and Scene_H
+var SCENE_W = 1366;
+var SCENE_H = 786;
+
 // Playersprite
 var playerSprite;
 var playerAnimation;
@@ -223,6 +227,9 @@ function draw() {
     // Draw the p5.clickables, in front of the mazes but behind the sprites 
     clickablesManager.draw();
 
+    // Sets Scene_W and Scene_H (asked for in adventure manager in constrainSpriteBounds();)
+    setScene();
+
     // No avatar shows up on Splash screen or Instructions screen
     if( adventureManager.getStateName() !== "Splash" && 
         adventureManager.getStateName() !== "Instructions" &&
@@ -236,7 +243,7 @@ function draw() {
       drawPlayerLives();
 
       // Debug to see player position
-      // showPlayerPos();
+      showPlayerPos();
 
       // Draw player sprite
       drawSprite(playerSprite);
@@ -247,7 +254,8 @@ function draw() {
               adventureManager.getStateName() !== "About" &&
               adventureManager.getStateName() !== "House" && 
               adventureManager.getStateName() !== "Restaurant" &&
-              adventureManager.getStateName() !== "Upstart") {
+              adventureManager.getStateName() !== "Upstart" &&
+              adventureManager.getStateName() !== "Brothel") {
         
         for (i=0; i <= 1; i++) {
           setEnemySprite(enemies[i]);
@@ -283,6 +291,10 @@ function keyPressed() {
     fullscreen(!fs);
     return;
   }
+  // Debug key
+  if (key === 'y') {
+    adventureManager.changeState("Map3");
+  }
 
   // Dispatch key events for adventure manager to move from state to state or do special actions
   // This can be disabled for NPC conversations or text entry   
@@ -315,6 +327,12 @@ function changedState(currentStateStr, newStateStr) {
   else if (currentStateStr === 'Upstart' && newStateStr === 'Map7') {
     movePlayerSprite(595, 545);
   }
+  else if (currentStateStr === 'Map3' && newStateStr === 'Brothel') {
+    movePlayerSprite(SCENE_W/2, SCENE_H*2);
+    playerSprite.changeAnimation('idle_b_large');
+    isidle = 0;
+    facingupdown = 0;
+  }
 }
 
 /*************************************************************************
@@ -331,7 +349,8 @@ function showPlayerPos() {
 function playerAnimationSizeTest(x, y) {
     if( adventureManager.getStateName() === "House" || 
         adventureManager.getStateName() === "Restaurant" ||
-        adventureManager.getStateName() === "Upstart") {
+        adventureManager.getStateName() === "Upstart" ||
+        adventureManager.getStateName() === "Brothel") {
       playerSprite.changeAnimation(x);
     }
     else {
@@ -454,7 +473,8 @@ function moveSprite() {
 
   if( adventureManager.getStateName() !== "House" && 
           adventureManager.getStateName() !== "Restaurant" &&
-          adventureManager.getStateName() !== "Upstart") {
+          adventureManager.getStateName() !== "Upstart" &&
+          adventureManager.getStateName() !== "Brothel") {
     drawPlayerShadow();
   }
 
@@ -485,7 +505,8 @@ function drawPlayerShadow() {
 function drawStamina() {
   if( adventureManager.getStateName() !== "House" && 
       adventureManager.getStateName() !== "Restaurant" &&
-      adventureManager.getStateName() !== "Upstart" ) {
+      adventureManager.getStateName() !== "Upstart" &&
+      adventureManager.getStateName() !== "Brothel" ) {
     push();
     rectMode(CORNER);
     noStroke();
@@ -503,6 +524,17 @@ function movePlayerSprite(x, y) {
   playerSprite.position.y = y;
 }
 
+function setScene() {
+  if( adventureManager.getStateName() === "Brothel") {
+    SCENE_W = width;
+    SCENE_H = height*2;
+  }
+  else {
+    SCENE_W = width;
+    SCENE_H = height;
+  }
+
+}
 /*************************************************************************
 // Enemy NPCs
 **************************************************************************/
@@ -536,6 +568,67 @@ function setEnemySprite(spritename) {
 
   // Draw Sprite
   drawSprite(spritename);
+}
+
+function drawEnemyTextBubble(spritename) {
+  let x = spritename.position.x - spritename.width;
+  let y = spritename.position.y - spritename.height - 5;
+
+  image(talkBubbleDynamic, x, y);
+  push();
+  fill(0);
+  textAlign(CENTER);
+  textSize(16);
+  text(enemyDialogue[enemyDialogueChoice], x + talkBubbleDynamic.width/2, y + talkBubbleDynamic.height/2);
+  pop();
+}
+
+function updateEnemyDialogueTimer() {
+  // bigger timer
+  if(enemyDialogueTimer.expired() ) {
+    // choose dialogue from array
+    enemyDialogueChoice = round(random(0, enemyDialogueLastNumber));
+
+    // choose which enemy will speak
+    enemySpeakingChoice = round(random(0, 1));
+    // print(enemySpeakingChoice);
+
+    // start the smaller timer
+    enemyDialogueDuration.start();
+  }
+
+  // smaller timer
+  if(enemyDialogueDuration.expired() === false) {
+    enemyDialogueVisible = true;
+
+    // reset the bigger timer
+    enemyDialogueTimer.start();
+  } 
+  else {
+    enemyDialogueVisible = false;
+  }
+}
+
+function drawEnemyTouched() {
+  if(enemyDamageTimer.expired() ) {
+
+    if (playerLives >= 1) {
+      playerLives = playerLives - 1;
+      // print('yeouch');
+      vib.play();
+      playerSprite.changeAnimation('idle_f');
+      playerSprite.velocity.x = 0;
+      playerSprite.velocity.y = 0;
+      isidle = 0;
+      facingupdown = 1;
+      playerSprite.position.x = playerSprite.position.x + round(random(10, 40));
+    } 
+    else if (playerLives === 0) {
+      print('you died');
+    }
+
+    enemyDamageTimer.start();
+  }
 }
 
 /*************************************************************************
@@ -577,61 +670,6 @@ function drawDialogueText() {
     pop();
 }
 
-function drawEnemyTextBubble(spritename) {
-  let x = spritename.position.x - spritename.width;
-  let y = spritename.position.y - spritename.height - 5;
-
-  image(talkBubbleDynamic, x, y);
-  push();
-  fill(0);
-  textAlign(CENTER);
-  textSize(16);
-  text(enemyDialogue[enemyDialogueChoice], x + talkBubbleDynamic.width/2, y + talkBubbleDynamic.height/2);
-  pop();
-}
-
-function updateEnemyDialogueTimer() {
-  // bigger timer
-  if(enemyDialogueTimer.expired() ) {
-    // choose dialogue from array
-    enemyDialogueChoice = round(random(0, enemyDialogueLastNumber));
-
-    // choose which enemy will speak
-    enemySpeakingChoice = round(random(0, 1));
-    print(enemySpeakingChoice);
-
-    // start the smaller timer
-    enemyDialogueDuration.start();
-  }
-
-  // smaller timer
-  if(enemyDialogueDuration.expired() === false) {
-    enemyDialogueVisible = true;
-
-    // reset the bigger timer
-    enemyDialogueTimer.start();
-  } 
-  else {
-    enemyDialogueVisible = false;
-  }
-}
-
-function drawEnemyTouched() {
-  if(enemyDamageTimer.expired() ) {
-
-    if (playerLives >= 1) {
-      playerLives = playerLives - 1;
-      print('yeouch');
-      vib.play();
-    } 
-    else if (playerLives === 0) {
-      print('you died');
-    }
-
-    enemyDamageTimer.start();
-  }
-}
-
 function drawPlayerLives() {
   let x = 40;
   let y = 40;
@@ -639,9 +677,6 @@ function drawPlayerLives() {
   let wh = 45;
 
   if (playerLives === 3) {
-    // ellipse(x + offset*2, y, wh, wh);
-    // ellipse(x + offset, y, wh, wh);
-    // ellipse(x, y, wh, wh);
     image(life_img, x + offset*2, wh, wh);
     image(life_img, x + offset, wh, wh);
     image(life_img, x, wh, wh);
@@ -969,21 +1004,76 @@ class UpstartRoom extends PNGRoom {
   }
 }
 
+class Map3Room extends PNGRoom {
+  preload() {
+      // Brothel
+      this.drawBrothelX = 769.6831;
+      this.drawBrothelY = 715.7191 - 711.6169/2;
+      this.brothelSprite = createSprite( this.drawBrothelX, this.drawBrothelY, 715.7066, 711.6169);
+      this.brothelSprite.addAnimation('regular',  loadAnimation('assets/buildings/brothel.png'));
+      this.brothelSpriteCollide = createSprite(this.drawBrothelX, 718, 100, 20);
+
+      // Building
+      this.buildingSprite = createSprite(159.9326, 715.7191 - 518/2, 281, 518);
+      this.buildingSprite.addAnimation('regular',  loadAnimation('assets/buildings/house_z3.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.brothelSprite);
+    drawSprite(this.buildingSprite);
+
+    if (playerSprite.overlap(this.brothelSpriteCollide)) {
+      drawEnterText();
+    }
+
+    if (playerSprite.overlap(this.brothelSpriteCollide) && keyIsDown(69)) {
+      this.enter();
+    }
+  }
+
+  enter() {
+    adventureManager.changeState("Brothel");
+  }
+}
+
 class BrothelRoom extends PNGRoom {
   preload() {
+      // Aunties Sprite
       this.npcX = 476.1189;
       this.npcY = 321.1925;
 
       this.aNPCSprite = createSprite(this.npcX, this.npcY, npcW, npcH);
       this.aNPCSprite.addAnimation('idle',  loadAnimation('assets/NPCs/npc_aunties_1.png', 'assets/NPCs/npc_aunties_2.png', 'assets/NPCs/npc_aunties_1.png'));
+
+      // Background for camera context
+     this.tileBg = new Group();
+
+      for(var i=0; i<40; i++)
+      {
+        var tile = createSprite(round(random(0, SCENE_W)), round(random(height/2, SCENE_H+height)));
+        tile.addAnimation('normal', 'assets/objects/tile.png');
+        this.tileBg.add(tile);
+      }
   }
 
   draw() {
+    // Set camera
+    camera.position.x = playerSprite.position.x;
+    camera.position.y = playerSprite.position.y;
+
+    // Draw bg
     super.draw();
+
+    // Draw tile background
+    drawSprites(this.tileBg);
+
+    // Draw Aunties sprite
     drawSprite(this.aNPCSprite);
     this.aNPCSprite.setCollider('rectangle', 0, -20, 50, 40);
     playerSprite.collide(this.aNPCSprite);
 
+    // Dialogue with Aunties sprite
     if (playerSprite.overlap(this.aNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'Aunties';
