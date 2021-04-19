@@ -37,6 +37,21 @@ var stamina = 200;
 var npcW = 25;
 var npcH = 40;
 
+// Enemies and Combat
+var enemies = [];
+var enemyDialogue = [];
+
+var enemyDialogueTimer;
+var enemyDialogueDuration;
+var enemyDialogueVisible = false;
+var enemyDialogueChoice;
+var enemySpeakingChoice = 0;
+var enemyDialogueLastNumber = 9;
+
+var enemyDamageTimer;
+var playerLives = 3;
+var potsticker = false;
+
 // Dialogue
 var talkBubble;
 var dialogueVisible = false;
@@ -87,6 +102,11 @@ var fontCairo;
 // Sounds
 var clickL;
 var clickH;
+var vib;
+
+// Lives
+var life_img;
+var potsticker_img;
 
 
 /*************************************************************************
@@ -106,9 +126,35 @@ function preload() {
 	// Music and Sounds
 	clickL = loadSound('sfx/click_low.mp3');
 	clickH = loadSound('sfx/click_high.mp3');
+  vib = loadSound('sfx/vib.mp3');
 
   // Images
   talkBubble = loadImage('assets/dialogue/box.png');
+  talkBubbleDynamic = loadImage('assets/dialogue/dialoguebox.png');
+  life_img = loadImage('assets/objects/life.png');
+  potsticker_img = loadImage('assets/objects/potsticker.png');
+
+  // Dialogue
+  enemyDialogue[0] = 'Hey, pretty lady.';
+  enemyDialogue[1] = 'Wanna be my China doll?';
+  enemyDialogue[2] = 'Ni hao...';
+  enemyDialogue[3] = 'Me so horny...';
+  enemyDialogue[4] = 'Me love you long time.';
+  enemyDialogue[5] = 'Come over here...';
+  enemyDialogue[6] = 'Let me touch you.';
+  enemyDialogue[7] = 'What’s your Chinese name?';
+  enemyDialogue[8] = 'You look exotic.';
+  enemyDialogue[9] = 'I love Asian women.';
+
+  // Pause between enemy dialogue
+  enemyDialogueTimer = new Timer(7000);
+  enemyDialogueTimer.start();
+
+  // Dialogue stays up for 4.5 seconds
+  enemyDialogueDuration = new Timer(4500);
+
+  // How often can the player take damage from enemy sprites
+  enemyDamageTimer = new Timer(5000);
 }
 
 /*************************************************************************
@@ -142,10 +188,13 @@ function setup() {
 
     // Enemy Sprite
     creepSprite1 = createSprite(playerSprite.position.x + 200, 545, playerSpriteW, playerSpriteH);
-    creepSprite1.addAnimation('brunet',  loadAnimation('assets/NPCs/creep_b_1.png', 'assets/NPCs/creep_b_2.png'));
+    creepSprite1.addAnimation('brunet',  loadAnimation('assets/NPCs/creep_b_1.png', 'assets/NPCs/creep_b_2.png', 'assets/NPCs/creep_b_3.png', 'assets/NPCs/creep_b_4.png', 'assets/NPCs/creep_b_5.png'));
 
     creepSprite2 = createSprite(playerSprite.position.x + 250, 545, playerSpriteW, playerSpriteH);
-    creepSprite2.addAnimation('blond',  loadAnimation('assets/NPCs/creep_y_1.png', 'assets/NPCs/creep_y_2.png'));
+    creepSprite2.addAnimation('blond',  loadAnimation('assets/NPCs/creep_y_1.png', 'assets/NPCs/creep_y_2.png', 'assets/NPCs/creep_y_3.png', 'assets/NPCs/creep_y_4.png', 'assets/NPCs/creep_y_5.png'));
+
+    enemies[0] = creepSprite1;
+    enemies[1] = creepSprite2;
 
     // Adventure Manager  ----------------------------------
     // Use this to track movement from room to room in adventureManager.draw()
@@ -179,31 +228,52 @@ function draw() {
         adventureManager.getStateName() !== "Instructions" &&
         adventureManager.getStateName() !== "About" ) {
         
-    // Sprites
-    // Player sprite responds to key commands
-    moveSprite();
+      // Sprites
+      // Player sprite responds to key commands
+      moveSprite();
 
-    // Debug to see player position
-    // showPlayerPos();
+      // Draw how many lives the player has left
+      drawPlayerLives();
 
-    // Draw player sprite
-    drawSprite(playerSprite);
+      // Debug to see player position
+      // showPlayerPos();
 
-    // Draw enemy NPCs
-    if( adventureManager.getStateName() !== "Splash" && 
-            adventureManager.getStateName() !== "Instructions" &&
-            adventureManager.getStateName() !== "About" &&
-            adventureManager.getStateName() !== "House" && 
-            adventureManager.getStateName() !== "Restaurant" &&
-            adventureManager.getStateName() !== "Upstart") {
-      drawEnemyNPCs();
-    }
+      // Draw player sprite
+      drawSprite(playerSprite);
 
-    // Draw dialogue over everything else
-    drawDialogueBox();
+      // Draw enemy NPCs
+      if( adventureManager.getStateName() !== "Splash" && 
+              adventureManager.getStateName() !== "Instructions" &&
+              adventureManager.getStateName() !== "About" &&
+              adventureManager.getStateName() !== "House" && 
+              adventureManager.getStateName() !== "Restaurant" &&
+              adventureManager.getStateName() !== "Upstart") {
+        
+        for (i=0; i <= 1; i++) {
+          setEnemySprite(enemies[i]);
+        }
 
-    frameRate(47);
-  } 
+      // draw enemy dialogue based upon which enemy is chosen to speak by the timer
+        if (enemySpeakingChoice === 0) {
+          if (enemyDialogueVisible === true) {
+            drawEnemyTextBubble(creepSprite1);
+          }
+        }
+        else if (enemySpeakingChoice === 1) {
+          if (enemyDialogueVisible === true) {
+            drawEnemyTextBubble(creepSprite2);
+          }
+        }
+
+      }
+
+      // Draw dialogue over everything else
+      drawDialogueBox();
+  }
+
+  frameRate(47);
+
+  updateEnemyDialogueTimer();
 }
 
 function keyPressed() {
@@ -212,9 +282,6 @@ function keyPressed() {
     fs = fullscreen();
     fullscreen(!fs);
     return;
-  }
-  else if(key === 'y') {
-    setEnemySpriteCoords(creepSprite1, 1366, playerSprite.position.y);
   }
 
   // Dispatch key events for adventure manager to move from state to state or do special actions
@@ -248,12 +315,6 @@ function changedState(currentStateStr, newStateStr) {
   else if (currentStateStr === 'Upstart' && newStateStr === 'Map7') {
     movePlayerSprite(595, 545);
   }
-
-
-  // if (currentStateStr === 'Map12' && newStateStr === 'Map11') {
-  //   setEnemySpriteCoords(creepSprite1, width, playerSprite.position.y);
-  // }
-
 }
 
 /*************************************************************************
@@ -445,11 +506,6 @@ function movePlayerSprite(x, y) {
 /*************************************************************************
 // Enemy NPCs
 **************************************************************************/
-function drawEnemyNPCs() {
-   setEnemySprite(creepSprite1);
-   setEnemySprite(creepSprite2);
-}
-
 function setEnemySprite(spritename) {
   // Set attraction point
   spritename.attractionPoint(0.2, playerSprite.position.x, playerSprite.position.y);
@@ -470,15 +526,16 @@ function setEnemySprite(spritename) {
   spritename.bounce(creepSprite1);
   spritename.bounce(creepSprite2);
 
+  // When the enemy sprite catches up with the player
+  if (playerSprite.overlap(this.creepSprite1)) {
+    drawEnemyTouched();
+  }
+  if (playerSprite.overlap(this.creepSprite2)) {
+    drawEnemyTouched();
+  }
+
   // Draw Sprite
   drawSprite(spritename);
-}
-
-function setEnemySpriteCoords(spritename, x, y) {
-  // creepSprite1.remove();
-  // creepSprite2.remove();
-  spritename.position.x = x;
-  spritename.position.x = y;
 }
 
 /*************************************************************************
@@ -504,7 +561,7 @@ function drawDialogueText() {
   textSize(20);
   textFont(fontCairo);
   fill(hexDark[3]);
-  text(currentDialogue, dialogueX + 100, dialogueY + 80, 650, 150);
+  text(currentDialogue, dialogueX + 100, dialogueY + 80, 650, 180);
   pop();
  }
 
@@ -518,6 +575,89 @@ function drawDialogueText() {
     textSize(22);
     text('Press [E] to enter', playerSprite.position.x, playerSprite.position.y - playerSpriteH - 50);
     pop();
+}
+
+function drawEnemyTextBubble(spritename) {
+  let x = spritename.position.x - spritename.width;
+  let y = spritename.position.y - spritename.height - 5;
+
+  image(talkBubbleDynamic, x, y);
+  push();
+  fill(0);
+  textAlign(CENTER);
+  textSize(16);
+  text(enemyDialogue[enemyDialogueChoice], x + talkBubbleDynamic.width/2, y + talkBubbleDynamic.height/2);
+  pop();
+}
+
+function updateEnemyDialogueTimer() {
+  // bigger timer
+  if(enemyDialogueTimer.expired() ) {
+    // choose dialogue from array
+    enemyDialogueChoice = round(random(0, enemyDialogueLastNumber));
+
+    // choose which enemy will speak
+    enemySpeakingChoice = round(random(0, 1));
+    print(enemySpeakingChoice);
+
+    // start the smaller timer
+    enemyDialogueDuration.start();
+  }
+
+  // smaller timer
+  if(enemyDialogueDuration.expired() === false) {
+    enemyDialogueVisible = true;
+
+    // reset the bigger timer
+    enemyDialogueTimer.start();
+  } 
+  else {
+    enemyDialogueVisible = false;
+  }
+}
+
+function drawEnemyTouched() {
+  if(enemyDamageTimer.expired() ) {
+
+    if (playerLives >= 1) {
+      playerLives = playerLives - 1;
+      print('yeouch');
+      vib.play();
+    } 
+    else if (playerLives === 0) {
+      print('you died');
+    }
+
+    enemyDamageTimer.start();
+  }
+}
+
+function drawPlayerLives() {
+  let x = 40;
+  let y = 40;
+  let offset = 60;
+  let wh = 45;
+
+  if (playerLives === 3) {
+    // ellipse(x + offset*2, y, wh, wh);
+    // ellipse(x + offset, y, wh, wh);
+    // ellipse(x, y, wh, wh);
+    image(life_img, x + offset*2, wh, wh);
+    image(life_img, x + offset, wh, wh);
+    image(life_img, x, wh, wh);
+  }
+  else if (playerLives === 2) {
+    image(life_img, x + offset, wh, wh);
+    image(life_img, x, wh, wh);
+  }
+  else if (playerLives === 1) {
+    image(life_img, x, wh, wh);
+  }
+
+  // check for potsticker
+  if (potsticker === true) {
+    image(potsticker_img, x, y + offset);
+  }
 }
 
 /*************************************************************************
@@ -663,8 +803,6 @@ class Map11Room extends PNGRoom {
     drawSprite(this.lampSprite);
     drawSprite(this.lampSprite2);
 
-
-
     if (playerSprite.overlap(this.restaurantSpriteCollide)) {
       drawEnterText();
     }
@@ -758,7 +896,7 @@ class HouseRoom extends PNGRoom {
     if (playerSprite.overlap(this.liNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'Li';
-      currentDialogue = 'Ren, wake the fuck up! Our parents are dead. It’s up to you to reclaim our family honor.';
+      currentDialogue = 'Ren... our parents are dead, murdered in the night while we slept. It’s up to you to RECLAIM OUR FAMILY HONOR. I’d do it, since I’m the older of us sisters, but I have to stay inside to finish my math homework.\n\n\nHey, by the way, watch out for CREEPS outside, I saw some lurking around out there. Try not to get kidnapped, or worse!';
     } 
     else {
       dialogueVisible = false;
@@ -784,7 +922,13 @@ class RestaurantRoom extends PNGRoom {
     if (playerSprite.overlap(this.ppNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'Paw Paw Potsticker';
-      currentDialogue = 'Oh Ren, it’s so good to see you!';
+      currentDialogue = 'Oh Ren, it’s so good to see you! I knew you would visit soon enough again. Here, have a potsticker -- you could use one, you know, you’re looking so skinny! \n\n\n... Hey, try not to scare away the customers outside. Those nice young men just can’t resist a beautiful girl like you.';
+
+      // heals the player to maximum (it's the power of dim sum)
+      playerLives = 3;
+
+      // gives player a potsticker
+      potsticker = true;
     } 
     else {
       dialogueVisible = false;
@@ -810,7 +954,14 @@ class UpstartRoom extends PNGRoom {
     if (playerSprite.overlap(this.usNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'The Upstart';
-      currentDialogue = 'Tch... hey kid.';
+        if (potsticker === false) {
+          currentDialogue = 'Tch... hey kid. Guess you heard about me trying to shake things up around here, wanted to know what the fuss was about. Well, I’ll let you in on a little secret... for a price. Living outside of society’s boundaries works up an appetite. Could you bring me some DIM SUM or something?';
+        } 
+        else {
+          currentDialogue = 'Hey, thanks for the potsticker. Alright, I’ll show you what’s up. This’ll help you unlock the SECRET POWERS that lurk within you.';
+
+          potsticker = false;
+        } 
     } 
     else {
       dialogueVisible = false;
