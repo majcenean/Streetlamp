@@ -21,3 +21,4 @@ Restaurant,RestaurantRoom,assets/rooms/restaurant.png,data/cl/restaurant.csv
 Brothel,BrothelRoom,assets/rooms/brothel.png,data/cl/brothel.csv
 Upstart,UpstartRoom,assets/rooms/upstart.png,data/cl/upstart.csv
 Skyscraper,PNGRoom,assets/rooms/skyscraper.png,data/cl/skyscraper.csv
+About,AboutScreen,assets/Instructions.png,

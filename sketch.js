@@ -141,10 +141,10 @@ function setup() {
     'assets/avatars/large/idle_b_1.png', 'assets/avatars/large/idle_b_2.png', 'assets/avatars/large/idle_b_3.png', 'assets/avatars/large/idle_b_2.png', 'assets/avatars/large/idle_b_1.png');
 
     // Enemy Sprite
-    creepSprite1 = createSprite(playerSprite.position.x + 300, playerSprite.position.y, playerSpriteW, playerSpriteH);
+    creepSprite1 = createSprite(playerSprite.position.x + 200, 545, playerSpriteW, playerSpriteH);
     creepSprite1.addAnimation('brunet',  loadAnimation('assets/NPCs/creep_b_1.png', 'assets/NPCs/creep_b_2.png'));
 
-    creepSprite2 = createSprite(playerSprite.position.x + 350, playerSprite.position.y, playerSpriteW, playerSpriteH);
+    creepSprite2 = createSprite(playerSprite.position.x + 250, 545, playerSpriteW, playerSpriteH);
     creepSprite2.addAnimation('blond',  loadAnimation('assets/NPCs/creep_y_1.png', 'assets/NPCs/creep_y_2.png'));
 
     // Adventure Manager  ----------------------------------
@@ -191,11 +191,11 @@ function draw() {
 
     // Draw enemy NPCs
     if( adventureManager.getStateName() !== "Splash" && 
-        adventureManager.getStateName() !== "Instructions" &&
-        adventureManager.getStateName() !== "About" &&
-        adventureManager.getStateName() !== "House" && 
-        adventureManager.getStateName() !== "Restaurant" &&
-        adventureManager.getStateName() !== "Upstart") {
+            adventureManager.getStateName() !== "Instructions" &&
+            adventureManager.getStateName() !== "About" &&
+            adventureManager.getStateName() !== "House" && 
+            adventureManager.getStateName() !== "Restaurant" &&
+            adventureManager.getStateName() !== "Upstart") {
       drawEnemyNPCs();
     }
 
@@ -213,6 +213,9 @@ function keyPressed() {
     fullscreen(!fs);
     return;
   }
+  else if(key === 'y') {
+    setEnemySpriteCoords(creepSprite1, 1366, playerSprite.position.y);
+  }
 
   // Dispatch key events for adventure manager to move from state to state or do special actions
   // This can be disabled for NPC conversations or text entry   
@@ -223,12 +226,10 @@ function mouseReleased() {
   adventureManager.mouseReleased();
 }
 
-// Moves the playerSprite based on room exit & entry
+// Called every time a state is changed
 function changedState(currentStateStr, newStateStr) {
-  // print("changedState callback:");
-  // print("current state = " + currentStateStr);
-  // print("new state = " + newStateStr);
 
+  // Moves the playerSprite based on room exit & entry
   if (currentStateStr === 'House' && newStateStr === 'Map12') {
     movePlayerSprite(800, 545);
   }
@@ -247,6 +248,12 @@ function changedState(currentStateStr, newStateStr) {
   else if (currentStateStr === 'Upstart' && newStateStr === 'Map7') {
     movePlayerSprite(595, 545);
   }
+
+
+  // if (currentStateStr === 'Map12' && newStateStr === 'Map11') {
+  //   setEnemySpriteCoords(creepSprite1, width, playerSprite.position.y);
+  // }
+
 }
 
 /*************************************************************************
@@ -383,7 +390,12 @@ function moveSprite() {
   // if (playerSprite.position.y > height - playerSpriteH/2)
   //   playerSprite.position.y = height - playerSpriteH/2;
 
-  drawPlayerShadow();
+
+  if( adventureManager.getStateName() !== "House" && 
+          adventureManager.getStateName() !== "Restaurant" &&
+          adventureManager.getStateName() !== "Upstart") {
+    drawPlayerShadow();
+  }
 
   // if the shift key is down AND stamina is less than 180 pts; then draw the stamina bar above head of playerSprite
   if ((keyIsDown(16)) && (stamina <= 190)) {
@@ -399,7 +411,7 @@ function drawPlayerShadow() {
   push();
   noStroke();
   fill(25, 25, 25, 70);
-  ellipse(playerSprite.position.x, playerSprite.position.y + playerSpriteH/2, playerSpriteW+playerSpriteW/3, playerSpriteH/6);
+  ellipse(playerSprite.position.x, playerSprite.position.y + playerSpriteH*1.5, playerSpriteW+playerSpriteW/3, playerSpriteH/6);
   pop();
   // little ellipse to see better
   push();
@@ -443,6 +455,9 @@ function setEnemySprite(spritename) {
   spritename.attractionPoint(0.2, playerSprite.position.x, playerSprite.position.y);
   spritename.maxSpeed = 2;
 
+  // Same y-value as player
+  // spritename.position.y = playerSprite.position.y;
+
   // Set animation flipping
   if(playerSprite.position.x < spritename.position.x - 10) {
     spritename.mirrorX(1);
@@ -459,6 +474,13 @@ function setEnemySprite(spritename) {
   drawSprite(spritename);
 }
 
+function setEnemySpriteCoords(spritename, x, y) {
+  // creepSprite1.remove();
+  // creepSprite2.remove();
+  spritename.position.x = x;
+  spritename.position.x = y;
+}
+
 /*************************************************************************
 // Dialogue
 **************************************************************************/
@@ -469,7 +491,7 @@ function drawDialogueBox() {
   }
 }
 
- function drawDialogueText() {
+function drawDialogueText() {
   // Dialogue Name
   push();
   textSize(30);
@@ -592,7 +614,6 @@ class AboutScreen extends PNGRoom {
   }
 }
 
-
 // Map Rooms
 class Map7Room extends PNGRoom {
   preload() {
@@ -621,16 +642,28 @@ class Map7Room extends PNGRoom {
 
 class Map11Room extends PNGRoom {
   preload() {
+      // Restaurant
       this.drawRestaurantX = 683;
       this.drawRestaurantY = 518.3071 - 379/2;
       this.restaurantSprite = createSprite( this.drawRestaurantX, this.drawRestaurantY, 555, 379);
       this.restaurantSprite.addAnimation('regular',  loadAnimation('assets/buildings/restaurant.png'));
       this.restaurantSpriteCollide = createSprite(this.drawRestaurantX, 520, 100, 20);
+
+      // Lamp
+      this.lampSprite = createSprite(300, 520 - 478/2, 113, 478);
+      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+
+      this.lampSprite2 = createSprite(1060, 520 - 478/2, 113, 478);
+      this.lampSprite2.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
   }
 
   draw() {
     super.draw();
     drawSprite(this.restaurantSprite);
+    drawSprite(this.lampSprite);
+    drawSprite(this.lampSprite2);
+
+
 
     if (playerSprite.overlap(this.restaurantSpriteCollide)) {
       drawEnterText();
@@ -648,6 +681,7 @@ class Map11Room extends PNGRoom {
 
 class Map12Room extends PNGRoom {
   preload() {
+      // Houses
       this.drawHouseX = 770;
       this.drawHouseY = 372.4025 - 478/5;
       this.houseSprite = createSprite( this.drawHouseX, this.drawHouseY, 227, 478);
@@ -660,8 +694,12 @@ class Map12Room extends PNGRoom {
       this.houseSpriteB = createSprite( this.drawHouseX + 250, this.drawHouseY, 228, 479);
       this.houseSpriteB.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
 
+      // Lamp
       this.lampSprite = createSprite(300, 520 - 478/2, 113, 478);
       this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+
+      // Music
+      this.bgsfx = loadSound('sfx/street.mp3');
   }
 
   draw() {
@@ -675,6 +713,11 @@ class Map12Room extends PNGRoom {
 
     drawSprite(this.lampSprite);
 
+    // Music
+    if (this.bgsfx.isPlaying() == false) {
+      this.bgsfx.play();
+    } 
+
     // Draw press E to enter text
     if (playerSprite.overlap(this.houseSpriteCollide)) {
       drawEnterText();
@@ -684,6 +727,10 @@ class Map12Room extends PNGRoom {
     if (playerSprite.overlap(this.houseSpriteCollide) && keyIsDown(69)) {
       this.enter();
     }
+  }
+
+  unload() {
+    this.bgsfx;
   }
 
   enter() {
@@ -770,7 +817,6 @@ class UpstartRoom extends PNGRoom {
     }
   }
 }
-
 
 class BrothelRoom extends PNGRoom {
   preload() {
