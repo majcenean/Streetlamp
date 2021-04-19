@@ -1,2 +1,6 @@
 ID,Name,State,PNGFilename,Text,x,y,visible
-0,StartGame,Instructions,,Enter,623,512,yes
+0,InstructButton,Splash,,ENTER,460,400,yes
+1,AboutButton,Splash,,ABOUT,260,400,yes
+2,BackToSplash1,About,,BACK,623,600,yes
+3,StartGame,Instructions,,BEGIN,816,600,yes
+4,BackToSplash2,Instructions,,BACK,450,600,yes

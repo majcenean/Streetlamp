@@ -22,8 +22,6 @@ var playerSprite;
 var playerAnimation;
 var playerSpriteW = 25;
 var playerSpriteH = 40;
-var playerSpriteX = 770;
-var playerSpriteY = 543;
 
 // PlayerSprite Controls
 var speedleft = 0;
@@ -130,14 +128,12 @@ function setup() {
 
     // Sprites  ----------------------------------
     // Player Sprite
-    playerSprite = createSprite(playerSpriteX, playerSpriteY, playerSpriteW, playerSpriteH);
+    playerSprite = createSprite(970, 300, playerSpriteW, playerSpriteH);
     var playerSpriteMove = playerSprite.addAnimation('idle_f',
     'assets/avatars/idle_f_1.png', 'assets/avatars/idle_f_2.png', 'assets/avatars/idle_f_3.png', 'assets/avatars/idle_f_2.png', 'assets/avatars/idle_f_1.png');
     playerSprite.addAnimation('moving', 'assets/avatars/walk_1.png', 'assets/avatars/walk_2.png', 'assets/avatars/walk_3.png', 'assets/avatars/walk_4.png', 'assets/avatars/walk_5.png', 'assets/avatars/walk_6.png','assets/avatars/walk_7.png', 'assets/avatars/walk_8.png',);
     playerSprite.addAnimation('idle_b',
     'assets/avatars/idle_b_1.png', 'assets/avatars/idle_b_2.png', 'assets/avatars/idle_b_3.png', 'assets/avatars/idle_b_2.png', 'assets/avatars/idle_b_1.png');
-
-
     playerSprite.addAnimation('idle_f_large',
     'assets/avatars/large/idle_f_1.png', 'assets/avatars/large/idle_f_2.png', 'assets/avatars/large/idle_f_3.png', 'assets/avatars/large/idle_f_2.png', 'assets/avatars/large/idle_f_1.png');
     playerSprite.addAnimation('moving_large', 'assets/avatars/large/walk_1.png', 'assets/avatars/large/walk_2.png', 'assets/avatars/large/walk_3.png', 'assets/avatars/large/walk_4.png', 'assets/avatars/large/walk_5.png', 'assets/avatars/large/walk_6.png','assets/avatars/large/walk_7.png', 'assets/avatars/large/walk_8.png',);
@@ -145,10 +141,10 @@ function setup() {
     'assets/avatars/large/idle_b_1.png', 'assets/avatars/large/idle_b_2.png', 'assets/avatars/large/idle_b_3.png', 'assets/avatars/large/idle_b_2.png', 'assets/avatars/large/idle_b_1.png');
 
     // Enemy Sprite
-    creepSprite1 = createSprite(playerSpriteX + 300, playerSpriteY, playerSpriteW, playerSpriteH);
+    creepSprite1 = createSprite(playerSprite.position.x + 300, playerSprite.position.y, playerSpriteW, playerSpriteH);
     creepSprite1.addAnimation('brunet',  loadAnimation('assets/NPCs/creep_b_1.png', 'assets/NPCs/creep_b_2.png'));
 
-    creepSprite2 = createSprite(playerSpriteX + 350, playerSpriteY, playerSpriteW, playerSpriteH);
+    creepSprite2 = createSprite(playerSprite.position.x + 350, playerSprite.position.y, playerSpriteW, playerSpriteH);
     creepSprite2.addAnimation('blond',  loadAnimation('assets/NPCs/creep_y_1.png', 'assets/NPCs/creep_y_2.png'));
 
     // Adventure Manager  ----------------------------------
@@ -161,7 +157,10 @@ function setup() {
     // This will load the images, go through state and interation tables, etc
     adventureManager.setup();
 
-    // call OUR function to setup additional information about the p5.clickables that are not in the array 
+    // changedState is the name of a callback function
+    adventureManager.setChangedStateCallback(changedState);
+
+    // Call our function to setup additional information about the p5.clickables that are not in the array 
     setupClickables(); 
 }
 
@@ -177,20 +176,24 @@ function draw() {
 
     // No avatar shows up on Splash screen or Instructions screen
     if( adventureManager.getStateName() !== "Splash" && 
-        adventureManager.getStateName() !== "Instructions" ) {
+        adventureManager.getStateName() !== "Instructions" &&
+        adventureManager.getStateName() !== "About" ) {
         
     // Sprites
     // Player sprite responds to key commands
     moveSprite();
 
     // Debug to see player position
-    showPlayerPos();
+    // showPlayerPos();
 
     // Draw player sprite
     drawSprite(playerSprite);
 
     // Draw enemy NPCs
-    if( adventureManager.getStateName() !== "House" && 
+    if( adventureManager.getStateName() !== "Splash" && 
+        adventureManager.getStateName() !== "Instructions" &&
+        adventureManager.getStateName() !== "About" &&
+        adventureManager.getStateName() !== "House" && 
         adventureManager.getStateName() !== "Restaurant" &&
         adventureManager.getStateName() !== "Upstart") {
       drawEnemyNPCs();
@@ -203,14 +206,6 @@ function draw() {
   } 
 }
 
-function showPlayerPos() {
-  push();
-  fill(255);
-  text(playerSprite.position.x, 20, 40);
-  text(playerSprite.position.y, 20, 70);
-  pop();
-}
-
 function keyPressed() {
   // toggle fullscreen mode
   if( key === 'f') {
@@ -219,11 +214,8 @@ function keyPressed() {
     return;
   }
 
-  // Dispatch key events for adventure manager to move from state to 
-  // state or do special actions - this can be disabled for 
-  // NPC conversations or text entry   
-
-  // dispatch to elsewhere
+  // Dispatch key events for adventure manager to move from state to state or do special actions
+  // This can be disabled for NPC conversations or text entry   
   adventureManager.keyPressed(key); 
 }
 
@@ -231,9 +223,43 @@ function mouseReleased() {
   adventureManager.mouseReleased();
 }
 
+// Moves the playerSprite based on room exit & entry
+function changedState(currentStateStr, newStateStr) {
+  // print("changedState callback:");
+  // print("current state = " + currentStateStr);
+  // print("new state = " + newStateStr);
+
+  if (currentStateStr === 'House' && newStateStr === 'Map12') {
+    movePlayerSprite(800, 545);
+  }
+  else if (currentStateStr === 'Map12' && newStateStr === 'House') {
+    movePlayerSprite(327.6839, 719.1834);
+  }
+  else if (currentStateStr === 'Restaurant' && newStateStr === 'Map11') {
+    movePlayerSprite(730, 545);
+  }
+  else if (currentStateStr === 'Map11' && newStateStr === 'Restaurant') {
+    movePlayerSprite(683, 689.428);
+  }
+  else if (currentStateStr === 'Map7' && newStateStr === 'Upstart') {
+    movePlayerSprite(998.2419, 710.0504);
+  }
+  else if (currentStateStr === 'Upstart' && newStateStr === 'Map7') {
+    movePlayerSprite(595, 545);
+  }
+}
+
 /*************************************************************************
 // Sprites
 **************************************************************************/
+function showPlayerPos() {
+  push();
+  fill(255);
+  text(playerSprite.position.x, 20, 40);
+  text(playerSprite.position.y, 20, 70);
+  pop();
+}
+
 function playerAnimationSizeTest(x, y) {
     if( adventureManager.getStateName() === "House" || 
         adventureManager.getStateName() === "Restaurant" ||
@@ -485,17 +511,21 @@ function setupClickables() {
 }
 
 clickableButtonHover = function () {
-  this.color = hexRed[0];
+  this.color = hexTurquoise[1];
   this.noTint = false;
-  this.tint = "#FF0000";
+  this.tint = null;
+  this.textSize = 28;
 }
 
 clickableButtonOnOutside = function () {
-  this.color = "#5d465270";
-  this.stroke = "#c2babe50";
-  this.textColor = "#c2babe50";
-  this.textSize = 25;
+  this.color = hexTurquoise[2];
+  this.stroke = hexDark[3];
+  this.strokeWeight = 1;
+  this.textColor = hexDark[3];
+  this.textSize = 24;
   this.textFont = fontChanga;
+  this.cornerRadius = 15;
+  this.textY = -5;
 }
 
 clickableButtonPressed = function() {
@@ -517,7 +547,9 @@ class InstructionsScreen extends PNGRoom {
     this.textBoxHeight = (height/6)*4; 
 
     // Hard-coded, but this could be loaded from a file if we wanted to be more elegant
-    this.instructionsText = "This game experience involves the following:\n\n\n- Violence, blood\n- Family death\n- Sexual harassment and objectification\n- Body image\n- Bright and eyestraining colors";
+    this.instructionsTitle = "••• CONTENT WARNING •••"
+    this.instructionsText = "This game experience involves the following:\n\n\n• Violence, blood, and gore\n• Death of family members\n• Sexual harassment and racial fetishization\n• Sex work and prostitution\n• Body image and mentions of weight\n• Bright colors which may cause eyestrain";
+    this.offsetY = 40;
   }
 
   draw() {
@@ -527,16 +559,38 @@ class InstructionsScreen extends PNGRoom {
     // this calls PNGRoom.draw()
     super.draw();
       
-    // text draw settings
-    fill(255);
-    textAlign(CENTER);
-    textSize(30);
+    // text
+    fill(hexDark[3]);
+    textAlign(LEFT);
+    textSize(26);
+    text(this.instructionsText, width/4, height/6 + this.offsetY, this.textBoxWidth, this.textBoxHeight);
 
-    // Draw text in a box
-    text(this.instructionsText, width/6, height/6, this.textBoxWidth, this.textBoxHeight );
+    // title
+    textAlign(CENTER);
+    textSize(34);
+    text(this.instructionsTitle, width/6, height/6 - this.offsetY, this.textBoxWidth, this.textBoxHeight);
   }
 }
 
+class AboutScreen extends PNGRoom {
+  preload() {
+    this.textBoxWidth = (width/6)*4;
+    this.textBoxHeight = (height/6)*5.5; 
+
+    this.aboutText = "Streetlamp is a game which satirizes Orientalist tendencies in physical and fictional environments. By exploring anti-Asian racism within visual and storytelling mediums that bleeds into the real world, it calls attention to the fetishization and sexualization Asian women suffer, in addition to criticizing tired racist tropes and stereotypes which are commonplace in Western media.\n\n\nThe game derives its name from two components: firstly, the 'sexy lamp' trope in which female characters are reduced to being sex objects as functional as lamps, and secondly, the design of the Dragon Street Lamp by W. D’Arcy Ryan (1925) in San Francisco's Chinatown, representative of Chinatown's larger Orientalist design direction developed in the 20th century, which still to this day draws tourists to gawk at and admire foreign lands which only exist in their imagination."
+  }
+
+  draw() {
+    tint(128);
+    super.draw();
+    
+    fill(hexDark[3]);
+    textAlign(LEFT);
+    textSize(24);
+
+    text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
+  }
+}
 
 
 // Map Rooms
@@ -562,7 +616,6 @@ class Map7Room extends PNGRoom {
 
   enter() {
     adventureManager.changeState("Upstart");
-    movePlayerSprite(998.2419, 710.0504);
   }
 }
 
@@ -590,7 +643,6 @@ class Map11Room extends PNGRoom {
 
   enter() {
     adventureManager.changeState("Restaurant");
-    movePlayerSprite(683, 689.428);
   }
 }
 
@@ -607,6 +659,9 @@ class Map12Room extends PNGRoom {
 
       this.houseSpriteB = createSprite( this.drawHouseX + 250, this.drawHouseY, 228, 479);
       this.houseSpriteB.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
+
+      this.lampSprite = createSprite(300, 520 - 478/2, 113, 478);
+      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
   }
 
   draw() {
@@ -617,6 +672,8 @@ class Map12Room extends PNGRoom {
     drawSprite(this.houseSprite);
     drawSprite(this.houseSpriteA);
     drawSprite(this.houseSpriteB);
+
+    drawSprite(this.lampSprite);
 
     // Draw press E to enter text
     if (playerSprite.overlap(this.houseSpriteCollide)) {
@@ -631,7 +688,6 @@ class Map12Room extends PNGRoom {
 
   enter() {
     adventureManager.changeState("House");
-    movePlayerSprite(327.6839, 719.1834);
   }
 }
 
