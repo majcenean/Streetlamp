@@ -335,9 +335,9 @@ function keyPressed() {
     return;
   }
   // Debug teleport
-  if( key === 'y') {
-    adventureManager.changeState("Brothel");
-  }
+  // if( key === 'y') {
+  //   adventureManager.changeState("Brothel");
+  // }
 
   // Dispatch key events for adventure manager to move from state to state or do special actions
   // This can be disabled for NPC conversations or text entry   
