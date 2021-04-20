@@ -20,6 +20,11 @@ House,HouseRoom,assets/rooms/house.png,data/cl/house.csv
 Restaurant,RestaurantRoom,assets/rooms/restaurant.png,data/cl/restaurant.csv
 Brothel,BrothelRoom,,data/cl/brothel.csv
 Upstart,UpstartRoom,assets/rooms/upstart.png,data/cl/upstart.csv
-Skyscraper,PNGRoom,assets/rooms/skyscraper.png,data/cl/skyscraper.csv
+Skyscraper,SkyRoom,assets/rooms/skyscraper.png,data/cl/skyscraper.csv
 About,AboutScreen,assets/Instructions.png,
-CreepDeath,PNGRoom,assets/Instructions.png,
+CreepDeath,CreepDeath,assets/Instructions.png,
+BrothelJoin,BrothelJoin,assets/Instructions.png,
+SalaryJoin,SalaryJoin,assets/Instructions.png,
+SalaryDeath,SalaryDeath,assets/Instructions.png,
+SalaryVictory,SalaryVictory,assets/Instructions.png,
+Reset,Reset,assets/Instructions.png,

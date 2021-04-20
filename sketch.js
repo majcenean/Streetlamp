@@ -4,10 +4,11 @@
     April 20, 2021
 
     Overview:
+    Streetlamp is a game which satirizes Orientalist tendencies in physical and fictional environments. By exploring anti-Asian racism within visual and storytelling mediums that bleeds into the real world, it calls attention to the fetishization and sexualization Asian women suffer, in addition to criticizing tired racist tropes and stereotypes which are commonplace in Western media. 
     
     ---------------------------------------------------------------------
     Notes: 
-     (1) 
+     (1) Don't sprint while exiting rooms, or you might end up a few states outside. If you go too fast, it might lag in loading the collisions and glitch out.
 **************************************************************************/
 
 
@@ -44,6 +45,14 @@ var npcH = 40;
 // NPC Dialogue
 var spokeToUpstart = false;
 
+// Dialogue Clickables
+const SalaryJoinButton = 10;
+const SalaryAttackButton = 11;
+const SalaryPowerButton = 12;
+const AuntiesButton = 13;
+const UpstartButton = 14;
+const BoatButton = 15;
+
 // Enemies and Combat
 var enemies = [];
 var enemyDialogue = [];
@@ -58,6 +67,7 @@ var enemyDialogueLastNumber = 9;
 var enemyDamageTimer;
 var playerLives = 3;
 var potsticker = false;
+var upstartFavor = false;
 
 // Dialogue
 var talkBubble;
@@ -114,6 +124,7 @@ var vib;
 // Lives
 var life_img;
 var potsticker_img;
+var power_img;
 
 
 /*************************************************************************
@@ -140,6 +151,7 @@ function preload() {
   talkBubbleDynamic = loadImage('assets/dialogue/dialoguebox.png');
   life_img = loadImage('assets/objects/life.png');
   potsticker_img = loadImage('assets/objects/potsticker.png');
+  power_img = loadImage('assets/objects/power.png');
 
   // Dialogue
   enemyDialogue[0] = 'Hey, pretty lady.';
@@ -204,13 +216,20 @@ function setup() {
     enemies[1] = creepSprite2;
 
     // Building Overlays
+    // Zone 1
     buildingZ1a1Sprite = createSprite(776, 890 - 518/2, 281, 518);
     buildingZ1a1Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
     buildingZ1b1Sprite = createSprite(495.3005, 890 - 518/2, 281, 518);
     buildingZ1b1Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
     buildingZ1b2Sprite = createSprite(1040.5561, 890 - 518/2, 281, 518);
     buildingZ1b2Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
-
+    // Zone 2
+    buildingZ2a1Sprite = createSprite(348.8876, 768 - 379/2, 281, 379);
+    buildingZ2a1Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_zone3a.png'));
+    buildingZ2b1Sprite = createSprite(602.0319, 768 - 379/2, 281, 379);
+    buildingZ2b1Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_zone3b.png'));
+    buildingZ2a2Sprite = createSprite(847.1555, 768 - 379/2, 281, 379);
+    buildingZ2a2Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_zone3a.png'));
 
     // Adventure Manager  ----------------------------------
     // Use this to track movement from room to room in adventureManager.draw()
@@ -245,7 +264,12 @@ function draw() {
     // No avatar shows up on Splash screen or Instructions screen
     if( adventureManager.getStateName() !== "Splash" && 
         adventureManager.getStateName() !== "Instructions" &&
-        adventureManager.getStateName() !== "About" ) {
+        adventureManager.getStateName() !== "About" &&
+        adventureManager.getStateName() !== "CreepDeath" &&
+        adventureManager.getStateName() !== "BrothelJoin" &&
+        adventureManager.getStateName() !== "SalaryJoin" &&
+        adventureManager.getStateName() !== "SalaryVictory" &&
+        adventureManager.getStateName() !== "SalaryDeath"  ) {
         
       // Sprites
       // Player sprite responds to key commands
@@ -267,7 +291,13 @@ function draw() {
               adventureManager.getStateName() !== "House" && 
               adventureManager.getStateName() !== "Restaurant" &&
               adventureManager.getStateName() !== "Upstart" &&
-              adventureManager.getStateName() !== "Brothel") {
+              adventureManager.getStateName() !== "Brothel" &&
+              adventureManager.getStateName() !== "Skyscraper" &&
+              adventureManager.getStateName() !== "CreepDeath" &&
+              adventureManager.getStateName() !== "BrothelJoin"  &&
+              adventureManager.getStateName() !== "SalaryJoin"  &&
+              adventureManager.getStateName() !== "SalaryVictory"  &&
+              adventureManager.getStateName() !== "SalaryDeath"  ) {
         
         for (i=0; i <= 1; i++) {
           setEnemySprite(enemies[i]);
@@ -304,10 +334,10 @@ function keyPressed() {
     fullscreen(!fs);
     return;
   }
-  // // Debug teleport
-  // if( key === 'y') {
-  //   adventureManager.changeState("Brothel");
-  // }
+  // Debug teleport
+  if( key === 'y') {
+    adventureManager.changeState("Brothel");
+  }
 
   // Dispatch key events for adventure manager to move from state to state or do special actions
   // This can be disabled for NPC conversations or text entry   
@@ -330,10 +360,10 @@ function changedState(currentStateStr, newStateStr) {
   }
   else if (currentStateStr === 'Restaurant' && newStateStr === 'Map11') {
     movePlayerSprite(730, 545);
-    playerFaceUp();
   }
   else if (currentStateStr === 'Map11' && newStateStr === 'Restaurant') {
     movePlayerSprite(683, 689.428);
+    playerFaceUp();
   }
   else if (currentStateStr === 'Map7' && newStateStr === 'Upstart') {
     movePlayerSprite(998.2419, 710.0504);
@@ -351,6 +381,10 @@ function changedState(currentStateStr, newStateStr) {
   }
   else if (currentStateStr === 'Skyscraper' && newStateStr === 'Map1') {
     movePlayerSprite(706.9506, 739.6697);
+  }
+  else if (currentStateStr === 'Map1' && newStateStr === 'Skyscraper') {
+    movePlayerSprite(683, 689.428);
+    playerFaceUp();
   }
 }
 
@@ -375,7 +409,8 @@ function playerAnimationSizeTest(x, y) {
     if( adventureManager.getStateName() === "House" || 
         adventureManager.getStateName() === "Restaurant" ||
         adventureManager.getStateName() === "Upstart" ||
-        adventureManager.getStateName() === "Brothel") {
+        adventureManager.getStateName() === "Brothel" ||
+        adventureManager.getStateName() === "Skyscraper") {
       playerSprite.changeAnimation(x);
     }
     else {
@@ -499,7 +534,8 @@ function moveSprite() {
   if( adventureManager.getStateName() !== "House" && 
           adventureManager.getStateName() !== "Restaurant" &&
           adventureManager.getStateName() !== "Upstart" &&
-          adventureManager.getStateName() !== "Brothel") {
+          adventureManager.getStateName() !== "Brothel" &&
+          adventureManager.getStateName() !== "Skyscraper") {
     drawPlayerShadow();
   }
 
@@ -531,7 +567,8 @@ function drawStamina() {
   if( adventureManager.getStateName() !== "House" && 
       adventureManager.getStateName() !== "Restaurant" &&
       adventureManager.getStateName() !== "Upstart" &&
-      adventureManager.getStateName() !== "Brothel" ) {
+      adventureManager.getStateName() !== "Brothel" &&
+      adventureManager.getStateName() !== "Skyscraper" ) {
     push();
     rectMode(CORNER);
     noStroke();
@@ -649,7 +686,10 @@ function drawEnemyTouched() {
       playerSprite.position.x = playerSprite.position.x + round(random(10, 40));
     } 
     else if (playerLives === 0) {
-      print('you died');
+      // print('you died');
+      vib.play();
+      adventureManager.changeState("CreepDeath");
+      movePlayerSprite(970, 300);
     }
 
     enemyDamageTimer.start();
@@ -668,6 +708,12 @@ function drawHouseOverlay() {
   if( adventureManager.getStateName() === "Map11") {
     drawSprite(buildingZ1a1Sprite);
     drawSprite(buildingZ1b1Sprite);
+  }
+  if( adventureManager.getStateName() === "Map10" || 
+    adventureManager.getStateName() === "Map7" ) {
+    drawSprite(buildingZ2a1Sprite);
+    drawSprite(buildingZ2b1Sprite);
+    drawSprite(buildingZ2a2Sprite);
   }
 }
 
@@ -704,6 +750,13 @@ function drawDialogueText() {
   text(currentDialogue, dialogueX + 100, dialogueY + 80, 650, 180);
   pop();
  }
+
+ function drawDialogueButtons(index, state) {
+  // for( let i = x; i <= y; i++ ) {
+  //   clickables[i].visible = state;
+  // }
+  clickables[index].visible = state;
+}
 
 // Draws "Press E to enter" text when close to a building
  function drawEnterText() {
@@ -755,6 +808,11 @@ function drawPlayerLives() {
   // check for potsticker
   if (potsticker === true) {
     image(potsticker_img, LivesX, LivesY + offset);
+  }
+
+  // check for power
+  if (upstartFavor === true) {
+    image(power_img, LivesX + offset*3, LivesY);
   }
 }
 
@@ -1134,14 +1192,24 @@ class Map10Room extends PNGRoom {
   preload() {
       this.drawUpstartHouseX = 598.4133;
       this.drawUpstartHouseY = 518.3071 - 379/2;
-      this.upstartHouse = createSprite( this.drawUpstartHouseX, this.drawUpstartHouseY, 281, 379);
-      this.upstartHouse.addAnimation('regular',  loadAnimation('assets/buildings/upstart.png'));
-      this.upstartHouseSpriteCollide = createSprite(this.drawUpstartHouseX, 520, 100, 20);
+
+      this.house1 = createSprite( this.drawUpstartHouseX - 200, this.drawUpstartHouseY, 281, 379);
+      this.house1.addAnimation('regular',  loadAnimation('assets/buildings/house_zone3a.png'));
+      this.house2 = createSprite( this.drawUpstartHouseX + 200, this.drawUpstartHouseY, 281, 379);
+      this.house2.addAnimation('regular',  loadAnimation('assets/buildings/house_zone3b.png'));
+
+      this.house3 = createSprite(793.2472, 177.9021 - 379/2, 281, 379);
+      this.house3.addAnimation('regular',  loadAnimation('assets/buildings/house_zone3b.png'));
+      this.house4 = createSprite(457.9133, 177.9021 - 379/2, 281, 379);
+      this.house4.addAnimation('regular',  loadAnimation('assets/buildings/house_zone3a.png'));
   }
 
   draw() {
     super.draw();
-    drawSprite(this.upstartHouse);
+    drawSprite(this.house1);
+    drawSprite(this.house2);
+    drawSprite(this.house3);
+    drawSprite(this.house4);
   }
 
 }
@@ -1353,7 +1421,7 @@ class HouseRoom extends PNGRoom {
     if (playerSprite.overlap(this.liNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'Li';
-      currentDialogue = 'Ren... our parents are dead, murdered in the night while we slept. It’s up to you to reclaim our FAMILY HONOR. I would do it, since I’m the older of us two sisters, but I have to stay inside to finish my math homework.\n\n\nHey, watch out for CREEPS outside, I saw some lurking around out there. Try not to get kidnapped, or worse!';
+      currentDialogue = 'Ren... our parents are dead, murdered in the night by SALARY’s loan sharks while we slept. It’s up to you to reclaim our FAMILY HONOR.\n\n\nI would do it, since I’m the older of us two sisters, but I have to stay inside to finish my math homework. Hey, watch out for CREEPS outside, I saw some lurking around out there. Try not to get kidnapped, or worse!';
     } 
     else {
       dialogueVisible = false;
@@ -1423,6 +1491,8 @@ class UpstartRoom extends PNGRoom {
           potsticker = false;
           // heals player
           playerLives = 3;
+          // gives favor
+          upstartFavor = true;
         } 
     } 
     else {
@@ -1475,6 +1545,12 @@ class BrothelRoom extends PNGRoom {
 
     // Collide for exit
       this.exitCollide = createSprite(width/2, SCENE_H+height, 1000, 20);
+
+    // Collide for join
+      this.joinCollide = createSprite(300, 0, 300, 20);
+
+      this.stairs = createSprite(300, -533/2, 288, 533);
+      this.stairs.addAnimation('idle',  loadAnimation('assets/objects/stairs_brothel.png'));
   }
 
   draw() {
@@ -1488,6 +1564,8 @@ class BrothelRoom extends PNGRoom {
     camera.position.y = playerSprite.position.y;
     // Draw bg
     super.draw();
+    // Draw stairs
+    drawSprite(this.stairs);
     // Draw tile background
     drawSprites(this.tileBg);
     // Draw playershadow
@@ -1507,6 +1585,15 @@ class BrothelRoom extends PNGRoom {
       this.exit();
     }
 
+    // Draw press E to join text
+    if (playerSprite.overlap(this.joinCollide)) {
+      drawEnterText();
+    }
+    // Join
+    if (playerSprite.overlap(this.joinCollide) && keyIsDown(69)) {
+      this.join();
+    }
+
     // Draw Aunties sprite
     drawSprite(this.aNPCSprite);
     this.aNPCSprite.setCollider('rectangle', 0, -20, 50, 40);
@@ -1516,10 +1603,12 @@ class BrothelRoom extends PNGRoom {
     if (playerSprite.overlap(this.aNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'Aunties';
-      currentDialogue = 'Oh, hello Ren! What brings you all the way to the entertainment district? ... No, we don’t know anything about your HONOR.\n\n\nThough... your quest sounds quite difficult. You could come WORK FOR US here instead, if you’d like. Otherwise, you might want to talk to that UPSTART in the slums of town. She’s a feisty one, though.';
+      currentDialogue = 'Oh, hello Ren! What brings you all the way to the entertainment district? ...\n\n\nHmm... your quest sounds quite difficult. You could come WORK FOR US here instead, if you’d like - go up the stairs right behind us if you’re interested. Otherwise, you might want to talk to that UPSTART in the slums of town. She’s a feisty one, though.';
+      // drawDialogueButtons(AuntiesButton, true);
     } 
     else {
       dialogueVisible = false;
+      // drawDialogueButtons(AuntiesButton, false);
     }
   }
 
@@ -1529,5 +1618,157 @@ class BrothelRoom extends PNGRoom {
     SCENE_H = 786;
     camera.position.x = width/2;
     camera.position.y = height/2;
+  }
+
+  join() {
+    adventureManager.changeState("BrothelJoin");
+    SCENE_W = 1366;
+    SCENE_H = 786;
+    camera.position.x = width/2;
+    camera.position.y = height/2;
+    print('changed it');
+  }
+}
+
+class SkyRoom extends PNGRoom {
+  preload() {
+      this.npcX = width/2;
+      this.npcY = height/3;
+
+      this.salarySprite = createSprite(this.npcX, this.npcY, npcW, npcH);
+      this.salarySprite.addAnimation('idle',  loadAnimation('assets/NPCs/npc_salary_1.png', 'assets/NPCs/npc_salary_2.png', 'assets/NPCs/npc_salary_3.png', 'assets/NPCs/npc_salary_2.png', 'assets/NPCs/npc_salary_1.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.salarySprite);
+    this.salarySprite.setCollider('rectangle', 0, -20, 25, 40);
+    playerSprite.collide(this.salarySprite);
+
+    if (playerSprite.overlap(this.salarySprite)) {
+      dialogueVisible = true;
+      currentDialogueName = 'Sir Salary';
+      currentDialogue = 'Welcome to Salary Enterprises! Hey, how’s my smile? Do you think that, with these sunglasses on, I look White? Anyways... Most likely, you’re here for revenge, right? For the death of your parents? Listen... I have an opportunity for you instead. Come work for me as my secretary and we’ll forget you were ever a poor girl from nowhere.';
+
+      if (upstartFavor === false) {
+          drawDialogueButtons(SalaryJoinButton, true);
+          drawDialogueButtons(SalaryAttackButton, true);
+      } else if (upstartFavor === true) {
+          drawDialogueButtons(SalaryJoinButton, true);
+          drawDialogueButtons(SalaryPowerButton, true);
+      }
+
+    } 
+    else {
+      dialogueVisible = false;
+      drawDialogueButtons(SalaryJoinButton, false);
+      drawDialogueButtons(SalaryAttackButton, false);
+      drawDialogueButtons(SalaryPowerButton, false);
+    }
+  }
+}
+
+// Ending states
+class CreepDeath extends PNGRoom {
+  preload() {
+    this.textBoxWidth = (width/6)*4;
+    this.textBoxHeight = (height/6)*5.5; 
+    this.aboutText = "Ren was found unconscious on the street. Her assailants were never caught."
+  }
+
+  draw() {
+    tint(128);
+    super.draw();
+    
+    fill(hexDark[3]);
+    textAlign(CENTER);
+    textSize(24);
+
+    text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
+  }
+}
+
+class BrothelJoin extends PNGRoom {
+  preload() {
+    this.textBoxWidth = (width/6)*4;
+    this.textBoxHeight = (height/6)*5.5; 
+    this.aboutText = "Ren agreed to enter a contract with her Aunties, and spent the rest of her short days at the Lotus of Desire."
+  }
+
+  draw() {
+    tint(128);
+    super.draw();
+    
+    fill(hexDark[3]);
+    textAlign(CENTER);
+    textSize(24);
+
+    text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
+  }
+}
+
+class SalaryJoin extends PNGRoom {
+  preload() {
+    this.textBoxWidth = (width/6)*4;
+    this.textBoxHeight = (height/6)*5.5; 
+    this.aboutText = "Ren agreed to enter a contract with Sir Salary, with a variable degree of worker exploitation."
+  }
+
+  draw() {
+    tint(128);
+    super.draw();
+    
+    fill(hexDark[3]);
+    textAlign(CENTER);
+    textSize(24);
+
+    text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
+  }
+}
+
+class SalaryDeath extends PNGRoom {
+  preload() {
+    this.textBoxWidth = (width/6)*4;
+    this.textBoxHeight = (height/6)*5.5; 
+    this.aboutText = "Ren engaged Sir Salary in combat, but could not unlock her mystical powers and so was slain."
+  }
+
+  draw() {
+    tint(128);
+    super.draw();
+    
+    fill(hexDark[3]);
+    textAlign(CENTER);
+    textSize(24);
+
+    text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
+  }
+}
+
+class SalaryVictory extends PNGRoom {
+  preload() {
+    this.textBoxWidth = (width/6)*4;
+    this.textBoxHeight = (height/6)*5.5; 
+    this.aboutText = "Ren engaged Sir Salary in combat, killing him instantly with her secret unlocked powers. Her parents, avenged, rested in peace."
+  }
+
+  draw() {
+    tint(128);
+    super.draw();
+    
+    fill(hexDark[3]);
+    textAlign(CENTER);
+    textSize(24);
+
+    text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
+  }
+}
+
+//Reloads the page after an ending
+class Reset extends PNGRoom {
+  draw() {
+    tint(128);
+    super.draw();
+    window.location.href = "."
   }
 }

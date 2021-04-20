@@ -52,3 +52,14 @@ House,,,,,S,Map12
 Restaurant,,,,,S,Map11
 Upstart,,,,,S,Map7
 Skyscraper,,,,,S,Map1
+CreepDeath,,,,RestartGame,,Reset
+BrothelJoin,,,,RestartGame,,Reset
+SalaryJoin,,,,RestartGame,,Reset
+SalaryDeath,,,,RestartGame,,Reset
+SalaryVictory,,,,RestartGame,,Reset
+Skyscraper,,,,SalaryJoinButton,,SalaryJoin
+Skyscraper,,,,SalaryAttackButton,,SalaryDeath
+Skyscraper,,,,SalaryPowerButton,,SalaryVictory
+Brothel,,,,AuntiesButton,,BrothelJoin
+Upstart,,,,UpstartButton,,
+Map13,,,,BoatButton,,
