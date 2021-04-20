@@ -33,8 +33,8 @@ https://xd.adobe.com/view/28e68961-1ba4-4e09-968f-90a58e149ca3-7db5/
 This game uses multiple add-on libraries for p5.js.
 * p5.clickable by Lartu
 * p5.play by Paolo Pedercini / @molleindustria
-* p5.timer by Scott Kidall
-* p5.adventure manager by Scott Kidall
+* p5.timer by Scott Kildall
+* p5.adventure manager by Scott Kildall
 
 ##### fonts
 Changa by Eduardo Tunni
