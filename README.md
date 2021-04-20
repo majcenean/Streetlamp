@@ -14,6 +14,10 @@ by Maj Jenkins
 * p5.timer
 
 ##### fonts
+Korean Calligraphy
 https://www.dafont.com/korean-calligraphy.font
+
+Osake
+https://www.dafont.com/osake.font
 
 ##### sfx

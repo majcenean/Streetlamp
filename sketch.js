@@ -41,6 +41,9 @@ var stamina = 200;
 var npcW = 25;
 var npcH = 40;
 
+// NPC Dialogue
+var spokeToUpstart = false;
+
 // Enemies and Combat
 var enemies = [];
 var enemyDialogue = [];
@@ -200,6 +203,15 @@ function setup() {
     enemies[0] = creepSprite1;
     enemies[1] = creepSprite2;
 
+    // Building Overlays
+    buildingZ1a1Sprite = createSprite(776, 890 - 518/2, 281, 518);
+    buildingZ1a1Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
+    buildingZ1b1Sprite = createSprite(495.3005, 890 - 518/2, 281, 518);
+    buildingZ1b1Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
+    buildingZ1b2Sprite = createSprite(1040.5561, 890 - 518/2, 281, 518);
+    buildingZ1b2Sprite.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
+
+
     // Adventure Manager  ----------------------------------
     // Use this to track movement from room to room in adventureManager.draw()
     adventureManager.setPlayerSprite(playerSprite);
@@ -243,7 +255,7 @@ function draw() {
       drawPlayerLives();
 
       // Debug to see player position
-      showPlayerPos();
+      // showPlayerPos();
 
       // Draw player sprite
       drawSprite(playerSprite);
@@ -272,8 +284,9 @@ function draw() {
             drawEnemyTextBubble(creepSprite2);
           }
         }
-
       }
+
+      drawHouseOverlay();
 
       // Draw dialogue over everything else
       drawDialogueBox();
@@ -291,10 +304,10 @@ function keyPressed() {
     fullscreen(!fs);
     return;
   }
-  // Debug key
-  if (key === 'y') {
-    adventureManager.changeState("Map3");
-  }
+  // // Debug teleport
+  // if( key === 'y') {
+  //   adventureManager.changeState("Brothel");
+  // }
 
   // Dispatch key events for adventure manager to move from state to state or do special actions
   // This can be disabled for NPC conversations or text entry   
@@ -307,16 +320,17 @@ function mouseReleased() {
 
 // Called every time a state is changed
 function changedState(currentStateStr, newStateStr) {
-
   // Moves the playerSprite based on room exit & entry
   if (currentStateStr === 'House' && newStateStr === 'Map12') {
     movePlayerSprite(800, 545);
   }
   else if (currentStateStr === 'Map12' && newStateStr === 'House') {
     movePlayerSprite(327.6839, 719.1834);
+    playerFaceUp();
   }
   else if (currentStateStr === 'Restaurant' && newStateStr === 'Map11') {
     movePlayerSprite(730, 545);
+    playerFaceUp();
   }
   else if (currentStateStr === 'Map11' && newStateStr === 'Restaurant') {
     movePlayerSprite(683, 689.428);
@@ -326,13 +340,24 @@ function changedState(currentStateStr, newStateStr) {
   }
   else if (currentStateStr === 'Upstart' && newStateStr === 'Map7') {
     movePlayerSprite(595, 545);
+    playerFaceUp();
   }
   else if (currentStateStr === 'Map3' && newStateStr === 'Brothel') {
-    movePlayerSprite(SCENE_W/2, SCENE_H*2);
+    movePlayerSprite(SCENE_W/2, SCENE_H*2 - 200);
+    playerFaceUp();
+  }
+  else if (currentStateStr === 'Brothel' && newStateStr === 'Map3') {
+    movePlayerSprite(560, 740);
+  }
+  else if (currentStateStr === 'Skyscraper' && newStateStr === 'Map1') {
+    movePlayerSprite(706.9506, 739.6697);
+  }
+}
+
+function playerFaceUp() {
     playerSprite.changeAnimation('idle_b_large');
     isidle = 0;
     facingupdown = 0;
-  }
 }
 
 /*************************************************************************
@@ -632,9 +657,31 @@ function drawEnemyTouched() {
 }
 
 /*************************************************************************
-// Dialogue
+// Dialogue and Overlay
 **************************************************************************/
+function drawHouseOverlay() {
+  if( adventureManager.getStateName() === "Map12") {
+    drawSprite(buildingZ1a1Sprite);
+    drawSprite(buildingZ1b1Sprite);
+    drawSprite(buildingZ1b2Sprite);
+  }
+  if( adventureManager.getStateName() === "Map11") {
+    drawSprite(buildingZ1a1Sprite);
+    drawSprite(buildingZ1b1Sprite);
+  }
+}
+
 function drawDialogueBox() {
+  // Account for camera
+  if( adventureManager.getStateName() === "Brothel") {
+    dialogueX = camera.position.x - 900/2;
+    dialogueY = camera.position.y;
+  }
+  else {
+    dialogueX = 1366/2 - 900/2;
+    dialogueY = 768 - 300 - 50;
+  }
+
   if (dialogueVisible === true) {
     image(talkBubble, dialogueX, dialogueY);
     drawDialogueText();
@@ -658,6 +705,7 @@ function drawDialogueText() {
   pop();
  }
 
+// Draws "Press E to enter" text when close to a building
  function drawEnterText() {
     push();
     textAlign(CENTER);
@@ -666,32 +714,47 @@ function drawDialogueText() {
     stroke(hexDark[0]);
     strokeWeight(3);
     textSize(22);
-    text('Press [E] to enter', playerSprite.position.x, playerSprite.position.y - playerSpriteH - 50);
+    if( adventureManager.getStateName() === "Brothel") {
+        text('Press [E] to exit', playerSprite.position.x, playerSprite.position.y - playerSpriteH - 100);
+    }
+    else {
+        text('Press [E] to enter', playerSprite.position.x, playerSprite.position.y - playerSpriteH - 50);
+    }
     pop();
 }
 
 function drawPlayerLives() {
-  let x = 40;
-  let y = 40;
-  let offset = 60;
+  // Defining variables
   let wh = 45;
+  let offset = 60;
 
+  // Account for camera
+  if( adventureManager.getStateName() === "Brothel") {
+      var LivesX = camera.position.x - width/2 + 40;
+      var LivesY = camera.position.y - height/2 + 40;
+  }
+  else {
+      LivesX = 40;
+      LivesY = 40;
+  }
+
+  // Draw how many lives depending on amount of lives
   if (playerLives === 3) {
-    image(life_img, x + offset*2, wh, wh);
-    image(life_img, x + offset, wh, wh);
-    image(life_img, x, wh, wh);
+    image(life_img, LivesX + offset*2, LivesY, wh, wh);
+    image(life_img, LivesX + offset, LivesY, wh, wh);
+    image(life_img, LivesX, LivesY, wh, wh);
   }
   else if (playerLives === 2) {
-    image(life_img, x + offset, wh, wh);
-    image(life_img, x, wh, wh);
+    image(life_img, LivesX + offset, LivesY, wh, wh);
+    image(life_img, LivesX, LivesY, wh, wh);
   }
   else if (playerLives === 1) {
-    image(life_img, x, wh, wh);
+    image(life_img, LivesX, LivesY, wh, wh);
   }
 
   // check for potsticker
   if (potsticker === true) {
-    image(potsticker_img, x, y + offset);
+    image(potsticker_img, LivesX, LivesY + offset);
   }
 }
 
@@ -745,7 +808,7 @@ class InstructionsScreen extends PNGRoom {
 
     // Hard-coded, but this could be loaded from a file if we wanted to be more elegant
     this.instructionsTitle = "••• CONTENT WARNING •••"
-    this.instructionsText = "This game experience involves the following:\n\n\n• Violence, blood, and gore\n• Death of family members\n• Sexual harassment and racial fetishization\n• Sex work and prostitution\n• Body image and mentions of weight\n• Bright colors which may cause eyestrain";
+    this.instructionsText = "This game experience involves the following:\n\n\n• Violence, blood, and gore\n• Death of family members\n• Sexual harassment and racial fetishization\n• References to sex work and prostitution\n• Body image and mentions of weight\n• Bright colors which may cause eyestrain";
     this.offsetY = 40;
   }
 
@@ -790,6 +853,200 @@ class AboutScreen extends PNGRoom {
 }
 
 // Map Rooms
+class Map1Room extends PNGRoom {
+  preload() {
+      // skyscraper
+      this.drawskyscraperX = 598.4133;
+      this.drawskyscraperY = 715.7191 - 1106/2;
+      this.skyscraperSprite = createSprite( this.drawskyscraperX, this.drawskyscraperY, 984, 1106);
+      this.skyscraperSprite.addAnimation('regular',  loadAnimation('assets/buildings/skyscraper.png'));
+      this.skyscraperSpriteCollide = createSprite(this.drawskyscraperX, 718, 100, 20);
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.skyscraperSprite);
+
+    if (playerSprite.overlap(this.skyscraperSpriteCollide)) {
+      drawEnterText();
+    }
+
+    if (playerSprite.overlap(this.skyscraperSpriteCollide) && keyIsDown(69)) {
+      this.enter();
+    }
+  }
+
+  enter() {
+    adventureManager.changeState("Skyscraper");
+  }
+}
+
+class Map2Room extends PNGRoom {
+  preload() {
+      // Building
+      this.buildingSprite1 = createSprite(549.7986, 766.307 - 518/2, 281, 518);
+      this.buildingSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z3a.png'));
+
+      // Building
+      this.buildingSprite2 = createSprite(823.5, 766.307 - 518/2, 281, 518);
+      this.buildingSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z3b.png'));
+
+      // Building
+      this.buildingSprite3 = createSprite(1236.6555, 715.7191 - 518/2, 281, 518);
+      this.buildingSprite3.addAnimation('regular',  loadAnimation('assets/buildings/house_z3a.png'));
+
+      // Building
+      this.buildingSprite4 = createSprite(533.6186, 263.1022  - 518/2, 281, 518);
+      this.buildingSprite4.addAnimation('regular',  loadAnimation('assets/buildings/house_z3b.png'));
+
+      // Building
+      this.buildingSprite5 = createSprite(846.9781, 263.1022  - 518/2, 281, 518);
+      this.buildingSprite5.addAnimation('regular',  loadAnimation('assets/buildings/house_z3a.png'));
+
+      // Building
+      this.buildingSprite6 = createSprite(1199.6404, 263.1022  - 518/2, 281, 518);
+      this.buildingSprite6.addAnimation('regular',  loadAnimation('assets/buildings/house_z3b.png'));
+
+      // Building
+      this.buildingSprite7 = createSprite(151, 264.1022  - 518/2, 281, 518);
+      this.buildingSprite7.addAnimation('regular',  loadAnimation('assets/buildings/house_z4.png'));
+
+      // Building
+      this.buildingSprite8 = createSprite(151, 715.7191 - 518/2, 281, 518);
+      this.buildingSprite8.addAnimation('regular',  loadAnimation('assets/buildings/house_z4.png'));
+
+
+      // Lamp
+      this.lampSprite = createSprite(1066.8971, 715.7191 - 478/2, 113, 478);
+      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.buildingSprite7);
+    drawSprite(this.buildingSprite8);
+    drawSprite(this.buildingSprite4);
+    drawSprite(this.buildingSprite5);
+    drawSprite(this.buildingSprite6);
+    drawSprite(this.buildingSprite1);
+    drawSprite(this.buildingSprite2);
+    drawSprite(this.buildingSprite3);
+    drawSprite(this.lampSprite);
+  }
+}
+
+class Map3Room extends PNGRoom {
+  preload() {
+      // Brothel
+      this.drawBrothelX = 769.6831;
+      this.drawBrothelY = 715.7191 - 711.6169/2;
+      this.brothelSprite = createSprite( this.drawBrothelX, this.drawBrothelY, 715.7066, 711.6169);
+      this.brothelSprite.addAnimation('regular',  loadAnimation('assets/buildings/brothel.png'));
+      this.brothelSpriteCollide = createSprite(this.drawBrothelX, 718, 100, 20);
+
+      // Building
+      this.buildingSprite1 = createSprite(159.9326, 715.7191 - 518/2, 281, 518);
+      this.buildingSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z3b.png'));
+
+      // Building
+      this.buildingSprite2 = createSprite(191.4927, 263.1022  - 518/2, 281, 518);
+      this.buildingSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z3a.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.buildingSprite2);
+    drawSprite(this.brothelSprite);
+    drawSprite(this.buildingSprite1);
+
+    if (playerSprite.overlap(this.brothelSpriteCollide)) {
+      drawEnterText();
+    }
+
+    if (playerSprite.overlap(this.brothelSpriteCollide) && keyIsDown(69)) {
+      this.enter();
+    }
+  }
+
+  enter() {
+    adventureManager.changeState("Brothel");
+  }
+}
+
+class Map4Room extends PNGRoom {
+  preload() {
+      // Building
+      this.buildingSprite1 = createSprite(422.6685, 518.307 - 520/2, 281, 520);
+      this.buildingSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z4.png'));
+
+      // Building
+      this.buildingSprite2 = createSprite(787.0674, 518.307 - 520/2, 281, 520);
+      this.buildingSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z4.png'));
+
+      // Lamp
+      this.lampSprite = createSprite(609.3596, 518.3077 - 478/2, 113, 478);
+      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.buildingSprite1);
+    drawSprite(this.buildingSprite2);
+    drawSprite(this.lampSprite);
+  }
+}
+
+class Map5Room extends PNGRoom {
+  preload() {
+      // Building
+      this.buildingSprite1 = createSprite(1199.6404, 517.307 - 518/2, 281, 518);
+      this.buildingSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z3b.png'));
+
+      // Advertisement
+      this.adSprite = createSprite(785.4409, 518 - 331/2, 253, 331);
+      this.adSprite.addAnimation('regular',  loadAnimation('assets/buildings/ad_small.png'));
+
+      // Lamp
+      this.lampSprite = createSprite(488.9944, 518.3077 - 478/2, 113, 478);
+      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+
+      // Building
+      this.buildingSprite2 = createSprite(518.4409, 176.4973 - 518/2, 281, 518);
+      this.buildingSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z3a.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.buildingSprite2);
+    drawSprite(this.adSprite);
+    drawSprite(this.buildingSprite1);
+    drawSprite(this.lampSprite);
+  }
+}
+
+class Map6Room extends PNGRoom {
+  preload() {
+      // Building
+      this.buildingSprite1 = createSprite(593.4045, 518.307 - 518/2, 281, 518);
+      this.buildingSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z3a.png'));
+
+            // Building
+      this.buildingSprite2 = createSprite(919.1573, 518.307 - 518/2, 281, 518);
+      this.buildingSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z3b.png'));
+
+      // Lamp
+      this.lampSprite = createSprite(187.4409 , 518.3077 - 478/2, 113, 478);
+      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.buildingSprite1);
+    drawSprite(this.buildingSprite2);
+    drawSprite(this.lampSprite);
+  }
+}
+
 class Map7Room extends PNGRoom {
   preload() {
       this.drawUpstartHouseX = 598.4133;
@@ -815,6 +1072,80 @@ class Map7Room extends PNGRoom {
   }
 }
 
+class Map8Room extends PNGRoom {
+  preload() {
+      // Building
+      this.buildingSprite1 = createSprite(1199.6404, 517.307 - 518/2, 281, 518);
+      this.buildingSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z3a.png'));
+
+      // Advertisement
+      this.adSprite = createSprite(769.9944, 515.807 - 515/2, 372, 515);
+      this.adSprite.addAnimation('regular',  loadAnimation('assets/buildings/ad_1.png', 'assets/buildings/ad_2.png', 'assets/buildings/ad_3.png'));
+
+      // Lamp
+      this.lampSprite = createSprite(488.9944, 518.3077 - 478/2, 113, 478);
+      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+
+      // Building
+      this.buildingSprite2 = createSprite(518.4409, 176.4973 - 518/2, 281, 518);
+      this.buildingSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z3b.png'));
+
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.buildingSprite2);
+    drawSprite(this.adSprite);
+    drawSprite(this.buildingSprite1);
+    drawSprite(this.lampSprite);
+  }
+}
+
+class Map9Room extends PNGRoom {
+  preload() {
+      // Building
+      this.buildingSprite1 = createSprite(174.8876, 517.307 - 518/2, 281, 518);
+      this.buildingSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z3a.png'));
+
+      // Advertisement
+      this.adSprite = createSprite(769.9944, 515.807 - 515/2, 372, 515);
+      this.adSprite.addAnimation('regular',  loadAnimation('assets/buildings/ad_medium.png'));
+
+      // Lamp
+      this.lampSprite = createSprite(488.9944, 518.3077 - 478/2, 113, 478);
+      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+
+      // Building
+      this.buildingSprite2 = createSprite(518.4409, 176.4973 - 518/2, 281, 518);
+      this.buildingSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z3b.png'));
+
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.buildingSprite2);
+    drawSprite(this.adSprite);
+    drawSprite(this.buildingSprite1);
+    drawSprite(this.lampSprite);
+  }
+}
+
+class Map10Room extends PNGRoom {
+  preload() {
+      this.drawUpstartHouseX = 598.4133;
+      this.drawUpstartHouseY = 518.3071 - 379/2;
+      this.upstartHouse = createSprite( this.drawUpstartHouseX, this.drawUpstartHouseY, 281, 379);
+      this.upstartHouse.addAnimation('regular',  loadAnimation('assets/buildings/upstart.png'));
+      this.upstartHouseSpriteCollide = createSprite(this.drawUpstartHouseX, 520, 100, 20);
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.upstartHouse);
+  }
+
+}
+
 class Map11Room extends PNGRoom {
   preload() {
       // Restaurant
@@ -824,18 +1155,26 @@ class Map11Room extends PNGRoom {
       this.restaurantSprite.addAnimation('regular',  loadAnimation('assets/buildings/restaurant.png'));
       this.restaurantSpriteCollide = createSprite(this.drawRestaurantX, 520, 100, 20);
 
-      // Lamp
-      this.lampSprite = createSprite(300, 520 - 478/2, 113, 478);
-      this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+      // Lamps
+      this.lampSprite1 = createSprite(300, 520 - 478/2, 113, 478);
+      this.lampSprite1.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
 
       this.lampSprite2 = createSprite(1060, 520 - 478/2, 113, 478);
       this.lampSprite2.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
+
+      // Other houses
+      this.houseSpriteA = createSprite(1229.6404, 518.3071 - 479/2, 228, 479);
+      this.houseSpriteA.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
+      this.houseSpriteB = createSprite(149.4053,  518.3071 - 479/2, 228, 479);
+      this.houseSpriteB.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
   }
 
   draw() {
     super.draw();
     drawSprite(this.restaurantSprite);
-    drawSprite(this.lampSprite);
+    drawSprite(this.houseSpriteA);
+    drawSprite(this.houseSpriteB);
+    drawSprite(this.lampSprite1);
     drawSprite(this.lampSprite2);
 
     if (playerSprite.overlap(this.restaurantSpriteCollide)) {
@@ -871,8 +1210,12 @@ class Map12Room extends PNGRoom {
       this.lampSprite = createSprite(300, 520 - 478/2, 113, 478);
       this.lampSprite.addAnimation('regular',  loadAnimation('assets/objects/lamp_1.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_4.png','assets/objects/lamp_5.png', 'assets/objects/lamp_4.png', 'assets/objects/lamp_3.png', 'assets/objects/lamp_2.png', 'assets/objects/lamp_1.png'));
 
+      // Other houses
+      this.houseSprite1 = createSprite(160, this.drawHouseY, 228, 479);
+      this.houseSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
+
       // Music
-      this.bgsfx = loadSound('sfx/street.mp3');
+      // this.bgsfx = loadSound('sfx/street.mp3');
   }
 
   draw() {
@@ -883,13 +1226,14 @@ class Map12Room extends PNGRoom {
     drawSprite(this.houseSprite);
     drawSprite(this.houseSpriteA);
     drawSprite(this.houseSpriteB);
+    drawSprite(this.houseSprite1);
 
     drawSprite(this.lampSprite);
 
     // Music
-    if (this.bgsfx.isPlaying() == false) {
-      this.bgsfx.play();
-    } 
+    // if (this.bgsfx.isPlaying() == false) {
+    //   this.bgsfx.play();
+    // } 
 
     // Draw press E to enter text
     if (playerSprite.overlap(this.houseSpriteCollide)) {
@@ -908,6 +1252,84 @@ class Map12Room extends PNGRoom {
 
   enter() {
     adventureManager.changeState("House");
+  }
+}
+
+class Map13Room extends PNGRoom {
+  preload() {
+      // Sand and Ocean
+      this.sand = createSprite(683, 698 - 276/2, 1366, 276);
+      this.sand.addAnimation('regular',  loadAnimation('assets/objects/sand.png'));
+
+      this.waves = createSprite(683, 768 - 276/2, 1366, 276);
+      this.waves.addAnimation('regular',  loadAnimation('assets/objects/1_ocean.png', 'assets/objects/2_ocean.png', 'assets/objects/3_ocean.png', 'assets/objects/4_ocean.png', 'assets/objects/5_ocean.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.sand);
+    drawSprite(this.waves);
+  }
+}
+
+class Map14Room extends PNGRoom {
+  preload() {
+      // Sand and Ocean
+      this.sand = createSprite(683, 698 - 276/2, 1366, 276);
+      this.sand.addAnimation('regular',  loadAnimation('assets/objects/sand.png'));
+
+      this.waves = createSprite(683, 768 - 276/2, 1366, 276);
+      this.waves.addAnimation('regular',  loadAnimation('assets/objects/1_ocean.png', 'assets/objects/2_ocean.png', 'assets/objects/3_ocean.png', 'assets/objects/4_ocean.png', 'assets/objects/5_ocean.png', 'assets/objects/4_ocean.png','assets/objects/3_ocean.png','assets/objects/2_ocean.png', 'assets/objects/1_ocean.png'));
+
+      // Houses
+      this.houseSprite1 = createSprite(199.0014, 384 - 479/2, 228, 479);
+      this.houseSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
+      this.houseSprite2 = createSprite(532.4003, 384 - 479/2, 228, 479);
+      this.houseSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
+      this.houseSprite3 = createSprite(834.0126, 384 - 479/2, 228, 479);
+      this.houseSprite3.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
+      this.houseSprite4 = createSprite(1166.9986, 384 - 479/2, 228, 479);
+      this.houseSprite4.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.sand);
+    drawSprite(this.waves);
+
+    drawSprite(this.houseSprite1);
+    drawSprite(this.houseSprite2);
+    drawSprite(this.houseSprite3);
+    drawSprite(this.houseSprite4);
+  }
+}
+
+class Map15Room extends PNGRoom {
+  preload() {
+      // Sand and Ocean
+      this.sand = createSprite(683, 698 - 276/2, 1366, 276);
+      this.sand.addAnimation('regular',  loadAnimation('assets/objects/sand.png'));
+
+      this.waves = createSprite(683, 768 - 276/2, 1366, 276);
+      this.waves.addAnimation('regular',  loadAnimation('assets/objects/1_ocean.png', 'assets/objects/2_ocean.png', 'assets/objects/3_ocean.png', 'assets/objects/4_ocean.png', 'assets/objects/5_ocean.png'));
+
+      // Houses
+      this.houseSprite1 = createSprite(199.0014, 384 - 479/2, 228, 479);
+      this.houseSprite1.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
+      this.houseSprite2 = createSprite(532.4003, 384 - 479/2, 228, 479);
+      this.houseSprite2.addAnimation('regular',  loadAnimation('assets/buildings/house_z1a.png'));
+      this.houseSprite3 = createSprite(834.0126, 384 - 479/2, 228, 479);
+      this.houseSprite3.addAnimation('regular',  loadAnimation('assets/buildings/house_z1b.png'));
+  }
+
+  draw() {
+    super.draw();
+    drawSprite(this.sand);
+    drawSprite(this.waves);
+
+    drawSprite(this.houseSprite1);
+    drawSprite(this.houseSprite2);
+    drawSprite(this.houseSprite3);
   }
 }
 
@@ -931,7 +1353,7 @@ class HouseRoom extends PNGRoom {
     if (playerSprite.overlap(this.liNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'Li';
-      currentDialogue = 'Ren... our parents are dead, murdered in the night while we slept. It’s up to you to RECLAIM OUR FAMILY HONOR. I’d do it, since I’m the older of us sisters, but I have to stay inside to finish my math homework.\n\n\nHey, by the way, watch out for CREEPS outside, I saw some lurking around out there. Try not to get kidnapped, or worse!';
+      currentDialogue = 'Ren... our parents are dead, murdered in the night while we slept. It’s up to you to reclaim our FAMILY HONOR. I would do it, since I’m the older of us two sisters, but I have to stay inside to finish my math homework.\n\n\nHey, watch out for CREEPS outside, I saw some lurking around out there. Try not to get kidnapped, or worse!';
     } 
     else {
       dialogueVisible = false;
@@ -957,7 +1379,7 @@ class RestaurantRoom extends PNGRoom {
     if (playerSprite.overlap(this.ppNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'Paw Paw Potsticker';
-      currentDialogue = 'Oh Ren, it’s so good to see you! I knew you would visit soon enough again. Here, have a potsticker -- you could use one, you know, you’re looking so skinny! \n\n\n... Hey, try not to scare away the customers outside. Those nice young men just can’t resist a beautiful girl like you.';
+      currentDialogue = 'Oh Ren, it’s so good to see you! I knew you would visit soon enough again. Here, have a potsticker -- you could use one, you know, you’re looking so skinny! ... \n\n\nI don’t know about your HONOR, but maybe your AUNTIES in the north of town know. You should pay them a visit when you have the chance.';
 
       // heals the player to maximum (it's the power of dim sum)
       playerLives = 3;
@@ -989,51 +1411,23 @@ class UpstartRoom extends PNGRoom {
     if (playerSprite.overlap(this.usNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'The Upstart';
-        if (potsticker === false) {
+      // if have not spoken to upstart before
+        if (spokeToUpstart === false) {
           currentDialogue = 'Tch... hey kid. Guess you heard about me trying to shake things up around here, wanted to know what the fuss was about. Well, I’ll let you in on a little secret... for a price. Living outside of society’s boundaries works up an appetite. Could you bring me some DIM SUM or something?';
+           spokeToUpstart = true;
         } 
-        else {
+        // if have spoken to upstart before and have a potsticker for her
+        else if (spokeToUpstart === true && potsticker === true) {
           currentDialogue = 'Hey, thanks for the potsticker. Alright, I’ll show you what’s up. This’ll help you unlock the SECRET POWERS that lurk within you.';
-
+          // takes potsticker
           potsticker = false;
+          // heals player
+          playerLives = 3;
         } 
     } 
     else {
       dialogueVisible = false;
     }
-  }
-}
-
-class Map3Room extends PNGRoom {
-  preload() {
-      // Brothel
-      this.drawBrothelX = 769.6831;
-      this.drawBrothelY = 715.7191 - 711.6169/2;
-      this.brothelSprite = createSprite( this.drawBrothelX, this.drawBrothelY, 715.7066, 711.6169);
-      this.brothelSprite.addAnimation('regular',  loadAnimation('assets/buildings/brothel.png'));
-      this.brothelSpriteCollide = createSprite(this.drawBrothelX, 718, 100, 20);
-
-      // Building
-      this.buildingSprite = createSprite(159.9326, 715.7191 - 518/2, 281, 518);
-      this.buildingSprite.addAnimation('regular',  loadAnimation('assets/buildings/house_z3.png'));
-  }
-
-  draw() {
-    super.draw();
-    drawSprite(this.brothelSprite);
-    drawSprite(this.buildingSprite);
-
-    if (playerSprite.overlap(this.brothelSpriteCollide)) {
-      drawEnterText();
-    }
-
-    if (playerSprite.overlap(this.brothelSpriteCollide) && keyIsDown(69)) {
-      this.enter();
-    }
-  }
-
-  enter() {
-    adventureManager.changeState("Brothel");
   }
 }
 
@@ -1048,25 +1442,70 @@ class BrothelRoom extends PNGRoom {
 
       // Background for camera context
      this.tileBg = new Group();
-
       for(var i=0; i<40; i++)
       {
         var tile = createSprite(round(random(0, SCENE_W)), round(random(height/2, SCENE_H+height)));
         tile.addAnimation('normal', 'assets/objects/tile.png');
         this.tileBg.add(tile);
       }
+
+    // Tables
+     this.tables = new Group();
+
+      var table1 = createSprite(round(random((SCENE_W/4)*3, (SCENE_W/4)*4)), round(random((height/1.5), SCENE_H+height)), 200, 100);
+      var table2 = createSprite(round(random(0, (SCENE_W/4)*1)), round(random((height/1.5), SCENE_H+height)), 200, 100);
+      var table3 = createSprite(round(random((SCENE_W/4)*3, (SCENE_W/4)*4)), round(random((height*1.5), SCENE_H+height)), 200, 100);
+      var table4 = createSprite(round(random(0, (SCENE_W/4)*1)), round(random((height*1.5), SCENE_H+height)), 200, 100);
+      var table5 = createSprite(round(random((SCENE_W/4)*3, (SCENE_W/4)*4)), round(random((height/2), height*1.5)), 200, 100);
+      var table6 = createSprite(round(random(0, (SCENE_W/4)*1)), round(random((height/2), height*1.5)), 200, 100);
+
+      table1.addAnimation('normal', 'assets/objects/table_brothel.png');
+      table2.addAnimation('normal', 'assets/objects/table_brothel.png');
+      table3.addAnimation('normal', 'assets/objects/table_brothel.png');
+      table4.addAnimation('normal', 'assets/objects/table_brothel.png');
+      table5.addAnimation('normal', 'assets/objects/table_brothel.png');
+      table6.addAnimation('normal', 'assets/objects/table_brothel.png');
+
+      this.tables.add(table1);
+      this.tables.add(table2);
+      this.tables.add(table3);
+      this.tables.add(table4);
+      this.tables.add(table5);
+      this.tables.add(table6);
+
+    // Collide for exit
+      this.exitCollide = createSprite(width/2, SCENE_H+height, 1000, 20);
   }
 
   draw() {
+    // Draw some background
+    background('#1099BF');
+    noStroke();
+    fill('#0B527F');
+    rect(0 - 400, 0, SCENE_W + 400, SCENE_H + 50);
     // Set camera
     camera.position.x = playerSprite.position.x;
     camera.position.y = playerSprite.position.y;
-
     // Draw bg
     super.draw();
-
     // Draw tile background
     drawSprites(this.tileBg);
+    // Draw playershadow
+      fill('#ffffff10');
+      noStroke();
+      ellipse(playerSprite.position.x, playerSprite.position.y, 400, 400);
+    // Draw tables
+    drawSprites(this.tables);
+    playerSprite.collide(this.tables);
+
+    // Draw press E to enter text
+    if (playerSprite.overlap(this.exitCollide)) {
+      drawEnterText();
+    }
+    // Exit
+    if (playerSprite.overlap(this.exitCollide) && keyIsDown(69)) {
+      this.exit();
+    }
 
     // Draw Aunties sprite
     drawSprite(this.aNPCSprite);
@@ -1077,10 +1516,18 @@ class BrothelRoom extends PNGRoom {
     if (playerSprite.overlap(this.aNPCSprite)) {
       dialogueVisible = true;
       currentDialogueName = 'Aunties';
-      currentDialogue = 'Oh, hello Ren! What brings you all the way to the entertainment district?';
+      currentDialogue = 'Oh, hello Ren! What brings you all the way to the entertainment district? ... No, we don’t know anything about your HONOR.\n\n\nThough... your quest sounds quite difficult. You could come WORK FOR US here instead, if you’d like. Otherwise, you might want to talk to that UPSTART in the slums of town. She’s a feisty one, though.';
     } 
     else {
       dialogueVisible = false;
     }
+  }
+
+  exit() {
+    adventureManager.changeState("Map3");
+    SCENE_W = 1366;
+    SCENE_H = 786;
+    camera.position.x = width/2;
+    camera.position.y = height/2;
   }
 }
