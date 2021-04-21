@@ -28,7 +28,10 @@ Within the game itself, the player is Ren, a young woman whose parents have been
 https://xd.adobe.com/view/28e68961-1ba4-4e09-968f-90a58e149ca3-7db5/
 
 ### Technical Details
-#### assets
+##### assets
+Chinese Dragon Stock Image
+* https://www.istockphoto.com/vector/red-paper-cut-a-dragon-china-zodiac-symbols-gm486696720-73307181
+
 ##### libraries
 This game uses multiple add-on libraries for p5.js.
 * p5.clickable by Lartu

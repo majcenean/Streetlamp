@@ -4,14 +4,15 @@ ID,Name,State,PNGFilename,Text,x,y,visible
 2,BackToSplash1,About,,BACK,623,600,yes
 3,StartGame,Instructions,,BEGIN,816,600,yes
 4,BackToSplash2,Instructions,,BACK,450,600,yes
-5,RestartGame,CreepDeath,,REBIRTH,623,600,yes
-6,RestartGame,BrothelJoin,,REBIRTH,623,600,yes
-7,RestartGame,SalaryJoin,,REBIRTH,623,600,yes
-8,RestartGame,SalaryDeath,,REBIRTH,623,600,yes
-9,RestartGame,SalaryVictory,,REBIRTH,623,600,yes
+5,RestartGame,CreepDeath,,RESTART,623,600,yes
+6,RestartGame,BrothelJoin,,REPLAY,623,600,yes
+7,RestartGame,SalaryJoin,,REPLAY,623,600,yes
+8,RestartGame,SalaryDeath,,REPLAY,623,600,yes
+9,RestartGame,SalaryVictory,,REPLAY,623,600,yes
 10,SalaryJoinButton,SkyRoom,,JOIN,800,370,no
 11,SalaryAttackButton,SkyRoom,,ATTACK,950,370,no
 12,SalaryPowerButton,SkyRoom,,KILL,950,370,no
 13,AuntiesButton,BrothelRoom,,JOIN,950,370,no
 14,UpstartButton,UpstartRoom,,JOIN,950,370,no
 15,BoatButton,Map13,,SAIL AWAY,950,370,no
+16,RestartGame,UpstartJoin,,REPLAY,623,600,yes

@@ -8,7 +8,9 @@
     
     ---------------------------------------------------------------------
     Notes: 
-     (1) Don't sprint while exiting rooms, or you might end up a few states outside. If you go too fast, it might lag in loading the collisions and glitch out.
+     (1) Don't sprint while exiting rooms, or you might end up a few states outside. If you go too fast, it might lag in loading the collisions and glitch out. Also, at times the collision CSVs don't load -- in this case, clear your browser cache and refresh the page!
+     (2) There currently aren't special splash screens for the ending states, but they could easily be done with more time (just swap out instructions.PNG for the new artwork in the adventureStates CSV.)
+     (3) Try and visit all NPCs :) There is a "place of interest" (i.e., a building with an NPC to visit) in each "zone".
 **************************************************************************/
 
 
@@ -267,6 +269,7 @@ function draw() {
         adventureManager.getStateName() !== "About" &&
         adventureManager.getStateName() !== "CreepDeath" &&
         adventureManager.getStateName() !== "BrothelJoin" &&
+        adventureManager.getStateName() !== "UpstartJoin" &&
         adventureManager.getStateName() !== "SalaryJoin" &&
         adventureManager.getStateName() !== "SalaryVictory" &&
         adventureManager.getStateName() !== "SalaryDeath"  ) {
@@ -295,6 +298,7 @@ function draw() {
               adventureManager.getStateName() !== "Skyscraper" &&
               adventureManager.getStateName() !== "CreepDeath" &&
               adventureManager.getStateName() !== "BrothelJoin"  &&
+              adventureManager.getStateName() !== "UpstartJoin"  &&
               adventureManager.getStateName() !== "SalaryJoin"  &&
               adventureManager.getStateName() !== "SalaryVictory"  &&
               adventureManager.getStateName() !== "SalaryDeath"  ) {
@@ -1486,17 +1490,27 @@ class UpstartRoom extends PNGRoom {
         } 
         // if have spoken to upstart before and have a potsticker for her
         else if (spokeToUpstart === true && potsticker === true) {
-          currentDialogue = 'Hey, thanks for the potsticker. Alright, I’ll show you what’s up. This’ll help you unlock the SECRET POWERS that lurk within you.';
+          currentDialogue = 'Hey, thanks for the potsticker. Alright, I’ll show you what’s up. This’ll help you unlock the SECRET POWERS that lurk within you. ... Good luck on your quest to avenge your parents.\n\n\nUnless... you’d ever want to forget about all that and join force instead. Y’know, no pressure. But you’re pretty cool, Ren. A BADASS, like me.';
           // takes potsticker
           potsticker = false;
           // heals player
           playerLives = 3;
           // gives favor
           upstartFavor = true;
+          // shows join button
+          drawDialogueButtons(UpstartButton, true);
+        } 
+        else if (spokeToUpstart === true && upstartFavor === true) {
+          currentDialogue = 'Hey, thanks for the potsticker. Alright, I’ll show you what’s up. This’ll help you unlock the SECRET POWERS that lurk within you. ... Good luck on your quest to avenge your parents.\n\n\nUnless... you’d ever want to forget about all that and join force instead. Y’know, no pressure. But you’re pretty cool, Ren. A BADASS, like me.';
+          // heals player
+          playerLives = 3;
+          // shows join button
+          drawDialogueButtons(UpstartButton, true);
         } 
     } 
     else {
       dialogueVisible = false;
+      drawDialogueButtons(UpstartButton, false);
     }
   }
 }
@@ -1551,6 +1565,30 @@ class BrothelRoom extends PNGRoom {
 
       this.stairs = createSprite(300, -533/2, 288, 533);
       this.stairs.addAnimation('idle',  loadAnimation('assets/objects/stairs_brothel.png'));
+
+    // Women
+     this.workers = new Group();
+      for(var i=0; i<12; i++)
+      {
+        var worker = createSprite(round(random(0, SCENE_W)), round(random(height/2, SCENE_H+height)));
+        worker.addAnimation('idle', 'assets/NPCs/brothel_1.png', 'assets/NPCs/brothel_2.png', 'assets/NPCs/brothel_3.png', 'assets/NPCs/brothel_2.png', 'assets/NPCs/brothel_1.png');
+        this.workers.add(worker);
+      }
+
+    // Men
+     this.creeps = new Group();
+      for(var i=0; i<3; i++)
+      {
+        var man = createSprite(round(random(0, SCENE_W)), round(random(height/2, SCENE_H+height)));
+        man.addAnimation('idle', 'assets/NPCs/creep_y_idle.png');
+        this.creeps.add(man);
+      }
+      for(var i=0; i<5; i++)
+      {
+        var man = createSprite(round(random(0, SCENE_W)), round(random(height/2, SCENE_H+height)));
+        man.addAnimation('idle', 'assets/NPCs/creep_b_idle.png');
+        this.creeps.add(man);
+      }
   }
 
   draw() {
@@ -1559,45 +1597,50 @@ class BrothelRoom extends PNGRoom {
     noStroke();
     fill('#0B527F');
     rect(0 - 400, 0, SCENE_W + 400, SCENE_H + 50);
+
     // Set camera
     camera.position.x = playerSprite.position.x;
     camera.position.y = playerSprite.position.y;
+
     // Draw bg
     super.draw();
+
     // Draw stairs
     drawSprite(this.stairs);
+
     // Draw tile background
     drawSprites(this.tileBg);
+
     // Draw playershadow
       fill('#ffffff10');
       noStroke();
       ellipse(playerSprite.position.x, playerSprite.position.y, 400, 400);
-    // Draw tables
-    drawSprites(this.tables);
-    playerSprite.collide(this.tables);
-
-    // Draw press E to enter text
-    if (playerSprite.overlap(this.exitCollide)) {
-      drawEnterText();
-    }
-    // Exit
-    if (playerSprite.overlap(this.exitCollide) && keyIsDown(69)) {
-      this.exit();
-    }
-
-    // Draw press E to join text
-    if (playerSprite.overlap(this.joinCollide)) {
-      drawEnterText();
-    }
-    // Join
-    if (playerSprite.overlap(this.joinCollide) && keyIsDown(69)) {
-      this.join();
-    }
 
     // Draw Aunties sprite
     drawSprite(this.aNPCSprite);
     this.aNPCSprite.setCollider('rectangle', 0, -20, 50, 40);
     playerSprite.collide(this.aNPCSprite);
+
+    // Draw tables and define collision behavior
+    drawSprites(this.tables);
+    this.tables.collide(this.tables);
+    playerSprite.collide(this.tables);
+
+    // Draw workers and creeps and define collision behavior
+    drawSprites(this.workers);
+    drawSprites(this.creeps);
+
+    this.workers.collide(this.workers);
+    this.workers.collide(this.creeps);
+    this.creeps.collide(this.creeps);
+    this.workers.collide(this.aNPCSprite);
+    this.creeps.collide(this.aNPCSprite);
+    this.workers.collide(this.tables);
+    this.creeps.collide(this.tables);
+
+    playerSprite.displace(this.workers);
+    playerSprite.displace(this.creeps);
+
 
     // Dialogue with Aunties sprite
     if (playerSprite.overlap(this.aNPCSprite)) {
@@ -1609,6 +1652,24 @@ class BrothelRoom extends PNGRoom {
     else {
       dialogueVisible = false;
       // drawDialogueButtons(AuntiesButton, false);
+    }
+
+    // Draw press E to enter text
+    if (playerSprite.overlap(this.exitCollide)) {
+      drawEnterText();
+    }
+    // Exit
+    if (playerSprite.overlap(this.exitCollide) && keyIsDown(69)) {
+      this.exit();
+    }
+    
+    // Draw press E to join text
+    if (playerSprite.overlap(this.joinCollide)) {
+      drawEnterText();
+    }
+    // Join
+    if (playerSprite.overlap(this.joinCollide) && keyIsDown(69)) {
+      this.join();
     }
   }
 
@@ -1682,7 +1743,7 @@ class CreepDeath extends PNGRoom {
     
     fill(hexDark[3]);
     textAlign(CENTER);
-    textSize(24);
+    textSize(34);
 
     text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
   }
@@ -1692,7 +1753,7 @@ class BrothelJoin extends PNGRoom {
   preload() {
     this.textBoxWidth = (width/6)*4;
     this.textBoxHeight = (height/6)*5.5; 
-    this.aboutText = "Ren agreed to enter a contract with her Aunties, and spent the rest of her short days at the Lotus of Desire."
+    this.aboutText = "Ren agreed to enter a contract with her Aunties, and spent the rest of her short days at the Lotus of Desire receiving solicitations from clientele."
   }
 
   draw() {
@@ -1701,7 +1762,7 @@ class BrothelJoin extends PNGRoom {
     
     fill(hexDark[3]);
     textAlign(CENTER);
-    textSize(24);
+    textSize(34);
 
     text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
   }
@@ -1711,7 +1772,7 @@ class SalaryJoin extends PNGRoom {
   preload() {
     this.textBoxWidth = (width/6)*4;
     this.textBoxHeight = (height/6)*5.5; 
-    this.aboutText = "Ren agreed to enter a contract with Sir Salary, with a variable degree of worker exploitation."
+    this.aboutText = "Ren agreed to enter a contract with Sir Salary, with a variable degree of worker exploitation and violations of appropriate conduct on Salary's part."
   }
 
   draw() {
@@ -1720,7 +1781,7 @@ class SalaryJoin extends PNGRoom {
     
     fill(hexDark[3]);
     textAlign(CENTER);
-    textSize(24);
+    textSize(34);
 
     text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
   }
@@ -1739,7 +1800,7 @@ class SalaryDeath extends PNGRoom {
     
     fill(hexDark[3]);
     textAlign(CENTER);
-    textSize(24);
+    textSize(34);
 
     text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
   }
@@ -1758,7 +1819,26 @@ class SalaryVictory extends PNGRoom {
     
     fill(hexDark[3]);
     textAlign(CENTER);
-    textSize(24);
+    textSize(34);
+
+    text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
+  }
+}
+
+class UpstartJoin extends PNGRoom {
+  preload() {
+    this.textBoxWidth = (width/6)*4;
+    this.textBoxHeight = (height/6)*5.5; 
+    this.aboutText = "Ren and The Upstart eloped, running away from the demented Orientalist fantasy hand-in-hand. They now jointly own 2 cats and a pickup truck."
+  }
+
+  draw() {
+    tint(128);
+    super.draw();
+    
+    fill(hexDark[3]);
+    textAlign(CENTER);
+    textSize(34);
 
     text(this.aboutText, width/6, height/6, this.textBoxWidth, this.textBoxHeight);
   }

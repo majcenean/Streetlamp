@@ -54,6 +54,7 @@ Upstart,,,,,S,Map7
 Skyscraper,,,,,S,Map1
 CreepDeath,,,,RestartGame,,Reset
 BrothelJoin,,,,RestartGame,,Reset
+UpstartJoin,,,,RestartGame,,Reset
 SalaryJoin,,,,RestartGame,,Reset
 SalaryDeath,,,,RestartGame,,Reset
 SalaryVictory,,,,RestartGame,,Reset
@@ -61,5 +62,5 @@ Skyscraper,,,,SalaryJoinButton,,SalaryJoin
 Skyscraper,,,,SalaryAttackButton,,SalaryDeath
 Skyscraper,,,,SalaryPowerButton,,SalaryVictory
 Brothel,,,,AuntiesButton,,BrothelJoin
-Upstart,,,,UpstartButton,,
+Upstart,,,,UpstartButton,,UpstartJoin
 Map13,,,,BoatButton,,
